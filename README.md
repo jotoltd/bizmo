@@ -72,6 +72,7 @@ Once saved, Supabase will relay all auth emails through SendGrid, lifting the pr
 - **SendGrid activity:** In SendGrid’s Activity tab, create an alert (Settings → Alerts) for bounce/blocked events so deliverability issues surface quickly. You can also enable the Event Webhook to forward events to your backend.
 - **Playwright auth smoke test:** `npm run test:e2e` spins up the dev server, signs up a disposable user, follows the `/auth/callback` flow, and asserts the dashboard renders the onboarding hero + “Add business” CTA. The test deletes the temporary Supabase user via the service-role key.
 - **CI guardrail:** `.github/workflows/e2e.yml` runs the same test on every push/PR. Provide the following GitHub secrets: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SITE_URL`.
+- **Playwright browsers:** The repo installs browsers automatically via `npm install` (which runs `scripts/install-playwright.cjs`). Vercel deploys skip the download via the `VERCEL` env, so no extra build steps are required. To skip locally, set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` before installing dependencies.
 
 ## Learn More
 

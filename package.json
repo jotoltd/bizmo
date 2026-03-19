@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed --project=chromium",
-    "postinstall": "npx playwright install --with-deps"
+    "postinstall": "node scripts/install-playwright.cjs"
   },
   "dependencies": {
     "@supabase/auth-ui-react": "^0.4.7",
