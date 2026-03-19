@@ -20,6 +20,52 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Supabase email confirmation
+
+By default Supabase requires users to confirm their email address before a session is issued. To disable confirmations and let users sign in immediately after signup:
+
+1. Open your project at [supabase.com/dashboard](https://supabase.com/dashboard).
+2. Go to **Authentication → Providers → Email**.
+3. Under **Confirm email**, disable the toggle labelled **Require email confirmation** (a.k.a. enable "Allow unconfirmed sign ups").
+4. Save the provider configuration.
+
+No application code changes are necessary—Supabase will now return an authenticated session right after `signUp` without waiting for a confirmation link. Remember to re‑enable confirmations before going to production if you need verified identities.
+
+## Troubleshooting: "Email rate limit exceeded"
+
+Supabase throttles how many transactional auth emails (confirmations, magic links, OTPs) can be sent per IP/email within a time window. If signups start failing with `email rate limit exceeded`:
+
+1. In the Supabase dashboard, open **Authentication → Rate limits**.
+2. Review the **Email** section. On paid plans you can raise the per-hour/per-minute caps; on the free tier you must stay within the defaults.
+3. Consider enabling a [custom SMTP provider](https://supabase.com/docs/guides/auth/auth-smtp) under **Authentication → SMTP**; most providers offer higher throughput than the shared Supabase mailer.
+4. If you’re just testing locally, wait a few minutes for the window to reset or use unique email addresses so the per-address quota isn’t exhausted.
+
+These limits are enforced server-side by Supabase, so there’s no code change in this repo that can override them.
+
+## Using SendGrid for Supabase Auth email
+
+1. **Add a verified sender/domain in SendGrid**
+   - In the SendGrid dashboard go to **Settings → Sender Authentication**.
+   - Either verify a full domain (recommended for production) or add a single sender address for testing. Complete the DNS or email verification flow.
+2. **Create an SMTP API key**
+   - Go to **Settings → API Keys → Create API Key**.
+   - Choose "Restricted" with **Mail Send** permission (Full Access or at least Send via SMTP).
+   - Copy the generated key; you will not be able to view it again.
+3. **Configure Supabase to use SendGrid**
+   - In Supabase, open **Authentication → SMTP** and switch Provider to **Custom**.
+   - Fill the fields as follows:
+     - **Sender name / email**: match the verified SendGrid sender.
+     - **SMTP host**: `smtp.sendgrid.net`
+     - **Port**: `587` (or `465` if you prefer SSL; 587 with STARTTLS is standard).
+     - **Username**: `apikey` (literally this string—SendGrid’s SMTP username is always `apikey`).
+     - **Password**: the API key you created in step 2.
+     - **Encryption**: `TLS` (STARTTLS).
+   - Click **Save** and use the built-in **Send test email** button to verify delivery.
+4. **Update environment tracking (optional)**
+   - Record the API key securely (1Password, Doppler, etc.). It is not stored in this repository.
+
+Once saved, Supabase will relay all auth emails through SendGrid, lifting the previous shared-pool limits.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
