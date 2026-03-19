@@ -87,6 +87,9 @@ export const BusinessExperience = ({
   );
 
   const wizardTask = flatTasks[wizardIndex];
+  const nextTask = wizardTask ?? flatTasks.find((task) => !completedSet.has(task.id));
+
+  const toolkitAffiliate = nextTask ? affiliateLinks[nextTask.affiliate] : null;
 
   const handleViewSwitch = (mode: ViewMode) => {
     if (mode === view) return;
@@ -206,6 +209,72 @@ export const BusinessExperience = ({
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="glass-panel p-6 space-y-4">
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Orientation</p>
+          <h3 className="text-2xl font-semibold">How to work this roadmap</h3>
+          <ul className="space-y-3 text-sm text-slate-300">
+            <li>
+              <span className="font-semibold text-white">Checklist</span> view lets you blitz through
+              categories in any order. Toggle tasks directly once they’re complete.
+            </li>
+            <li>
+              <span className="font-semibold text-white">Wizard</span> view gives you a guided “next best
+              step,” complete with why/how context.
+            </li>
+            <li>
+              Use the badge tracker to see what unlocks when you finish critical steps.
+            </li>
+          </ul>
+          <p className="text-xs text-slate-500">
+            Tip: Switch views anytime—Bizno saves your preference per business.
+          </p>
+        </div>
+
+        <div className="glass-panel p-6 space-y-3">
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Toolkit tip</p>
+          {nextTask && toolkitAffiliate ? (
+            <>
+              <h3 className="text-2xl font-semibold">{nextTask.title}</h3>
+              <p className="text-sm text-slate-400">{nextTask.why}</p>
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-4 space-y-3">
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Recommended tool</p>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-lg font-semibold">{toolkitAffiliate.label}</p>
+                  <a
+                    href={toolkitAffiliate.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={cn(
+                      buttonVariants({ variant: "default", size: "sm" }),
+                      "bg-electric text-black"
+                    )}
+                  >
+                    Launch ↗
+                  </a>
+                </div>
+                <ol className="space-y-2 text-sm text-slate-300">
+                  {nextTask.how.map((step) => (
+                    <li key={step} className="flex gap-2">
+                      <span className="text-electric">•</span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <h3 className="text-2xl font-semibold">All tasks complete</h3>
+              <p className="text-sm text-slate-400">
+                You’ve cleared every action in this plan. Revisit categories anytime or add a new business from
+                the dashboard to keep the momentum going.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

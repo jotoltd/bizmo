@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed --project=chromium",
+    "postinstall": "npx playwright install --with-deps"
   },
   "dependencies": {
     "@supabase/auth-ui-react": "^0.4.7",
@@ -33,6 +36,7 @@
     "env-cmd": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
+    "@playwright/test": "^1.44.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

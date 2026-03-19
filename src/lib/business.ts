@@ -1,6 +1,17 @@
 import type { Business } from "@/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+type BusinessRow = Omit<Business, "completed_tasks" | "view_preference"> & {
+  completed_tasks: string[] | null;
+  view_preference: Business["view_preference"] | null;
+};
+
+const normalizeBusiness = (business: BusinessRow): Business => ({
+  ...business,
+  completed_tasks: business.completed_tasks ?? [],
+  view_preference: business.view_preference ?? "checklist",
+});
+
 export const getBusinesses = async (userId: string): Promise<Business[]> => {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
@@ -14,7 +25,7 @@ export const getBusinesses = async (userId: string): Promise<Business[]> => {
     return [];
   }
 
-  return (data ?? []) as Business[];
+  return ((data ?? []) as BusinessRow[]).map(normalizeBusiness);
 };
 
 export const getBusiness = async (
@@ -34,5 +45,5 @@ export const getBusiness = async (
     return null;
   }
 
-  return data as Business;
+  return normalizeBusiness(data as BusinessRow);
 };
