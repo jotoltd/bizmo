@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const getAdminClient = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,12 +32,11 @@ export const signUpAction = async (input: {
   }
 
   // Create user via admin API — auto-confirmed, no SMTP email sent
-  const { data: newUser, error: createError } =
-    await adminClient.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
+  const { error: createError } = await adminClient.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
 
   if (createError) {
     if (createError.message?.toLowerCase().includes("already")) {
@@ -48,17 +46,6 @@ export const signUpAction = async (input: {
     return { error: createError.message };
   }
 
-  // Now sign the user in so the session cookie is set
-  const supabase = await createSupabaseServerClient();
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (signInError) {
-    console.error("Post-signup signIn failed:", signInError.message);
-    return { error: "Account created but sign-in failed. Please sign in manually." };
-  }
-
+  // User created and auto-confirmed — client will sign in from the browser
   return { success: true };
 };
