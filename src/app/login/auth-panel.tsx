@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { envClient } from "@/lib/env-client";
 import { Button } from "@/components/ui/button";
+import { signUpAction } from "@/app/login/actions";
 
 type AuthMode = "sign-in" | "sign-up" | "reset";
 
@@ -42,16 +43,10 @@ export const AuthPanel = () => {
       }
 
       if (mode === "sign-up") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${envClient.siteUrl}/auth/callback`,
-          },
-        });
+        const result = await signUpAction({ email, password });
 
-        if (error) {
-          setMessage({ type: "error", text: error.message });
+        if (result?.error) {
+          setMessage({ type: "error", text: result.error });
           return;
         }
 
