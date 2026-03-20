@@ -3,12 +3,19 @@
 import { createClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const adminClient = (() => {
+const getAdminClient = () => {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
+  if (!url || !key) {
+    console.error(
+      "signUpAction: missing env vars —",
+      url ? "URL ok" : "URL missing",
+      key ? "KEY ok" : "KEY missing"
+    );
+    return null;
+  }
   return createClient(url, key);
-})();
+};
 
 export const signUpAction = async (input: {
   email: string;
@@ -20,6 +27,7 @@ export const signUpAction = async (input: {
     return { error: "Please provide a valid email and password (min 6 characters)." };
   }
 
+  const adminClient = getAdminClient();
   if (!adminClient) {
     return { error: "Server configuration error. Please try again later." };
   }
@@ -33,7 +41,6 @@ export const signUpAction = async (input: {
     });
 
   if (createError) {
-    // Supabase returns "A user with this email address has already been registered"
     if (createError.message?.toLowerCase().includes("already")) {
       return { error: "An account with this email already exists. Try signing in instead." };
     }
