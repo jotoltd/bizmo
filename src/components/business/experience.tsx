@@ -142,13 +142,14 @@ export const BusinessExperience = ({
   };
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-10 space-y-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <section className="mx-auto max-w-6xl px-4 py-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.5em] text-slate-500">
             {business.type}
           </p>
-          <h1 className="text-4xl font-semibold">{business.name}</h1>
+          <h1 className="text-3xl font-semibold">{business.name}</h1>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-white/5 bg-white/5 p-1">
           {VIEW_MODES.map((mode) => (
@@ -156,7 +157,7 @@ export const BusinessExperience = ({
               key={mode.id}
               onClick={() => handleViewSwitch(mode.id)}
               className={cn(
-                "px-4 py-2 text-sm font-semibold rounded-full",
+                "px-4 py-1.5 text-sm font-semibold rounded-full transition-colors",
                 view === mode.id
                   ? "bg-electric text-black"
                   : "text-slate-400 hover:text-white"
@@ -169,114 +170,57 @@ export const BusinessExperience = ({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="glass-panel p-6 space-y-6 lg:col-span-2">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
-                Readiness summary
-              </p>
-              <h2 className="text-3xl font-semibold">
-                Your business is {percent(progress.ratio)} digital-ready
-              </h2>
-            </div>
-            <div className="text-right text-sm text-slate-400">
-              <p>
-                {progress.completed} / {progress.total} tasks complete
-              </p>
-              <p>Finish the checklist to unlock "Fully Digital 🚀"</p>
-            </div>
-          </div>
-          <Progress value={progress.percentage} className="h-3 bg-white/10" />
-        </div>
-        <div className="glass-panel p-6 space-y-4">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            Achievements
-          </p>
-          <div className="space-y-3">
-            {badges.map((badge) => (
-              <div
-                key={badge.id}
-                className={cn(
-                  "flex items-center justify-between rounded-xl border px-3 py-3",
-                  badge.unlocked ? "border-electric/50 bg-electric/10" : "border-white/10"
-                )}
-              >
-                <span className="font-medium">{badge.label}</span>
-                <span className="text-sm text-slate-400">
-                  {badge.unlocked ? "Unlocked" : "Pending"}
+      {/* Progress bar + badges row */}
+      <div className="glass-panel p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
+          <h2 className="text-xl font-semibold">
+            {percent(progress.ratio)} digital-ready
+          </h2>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-400">
+              {progress.completed}/{progress.total} tasks
+            </span>
+            <div className="flex gap-1.5">
+              {badges.map((badge) => (
+                <span
+                  key={badge.id}
+                  title={badge.label}
+                  className={cn(
+                    "inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                    badge.unlocked
+                      ? "bg-electric/20 text-electric border border-electric/40"
+                      : "bg-white/5 text-slate-500 border border-white/10"
+                  )}
+                >
+                  {badge.label}
                 </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
+        <Progress value={progress.percentage} className="h-2" />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="glass-panel p-6 space-y-4">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Orientation</p>
-          <h3 className="text-2xl font-semibold">How to work this roadmap</h3>
-          <ul className="space-y-3 text-sm text-slate-300">
-            <li>
-              <span className="font-semibold text-white">Checklist</span> view lets you blitz through
-              categories in any order. Toggle tasks directly once they’re complete.
-            </li>
-            <li>
-              <span className="font-semibold text-white">Wizard</span> view gives you a guided “next best
-              step,” complete with why/how context.
-            </li>
-            <li>
-              Use the badge tracker to see what unlocks when you finish critical steps.
-            </li>
-          </ul>
-          <p className="text-xs text-slate-500">
-            Tip: Switch views anytime—Bizno saves your preference per business.
-          </p>
+      {/* Quick tip — compact single row */}
+      {nextTask && toolkitAffiliate && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/5 bg-white/[0.03] px-5 py-3">
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-electric font-semibold">Next up:</span>
+            <span className="text-slate-300">{nextTask.title}</span>
+          </div>
+          <a
+            href={toolkitAffiliate.url}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              buttonVariants({ variant: "default", size: "sm" }),
+              "bg-electric text-black"
+            )}
+          >
+            {toolkitAffiliate.label} ↗
+          </a>
         </div>
-
-        <div className="glass-panel p-6 space-y-3">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Toolkit tip</p>
-          {nextTask && toolkitAffiliate ? (
-            <>
-              <h3 className="text-2xl font-semibold">{nextTask.title}</h3>
-              <p className="text-sm text-slate-400">{nextTask.why}</p>
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4 space-y-3">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Recommended tool</p>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-lg font-semibold">{toolkitAffiliate.label}</p>
-                  <a
-                    href={toolkitAffiliate.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={cn(
-                      buttonVariants({ variant: "default", size: "sm" }),
-                      "bg-electric text-black"
-                    )}
-                  >
-                    Launch ↗
-                  </a>
-                </div>
-                <ol className="space-y-2 text-sm text-slate-300">
-                  {nextTask.how.map((step) => (
-                    <li key={step} className="flex gap-2">
-                      <span className="text-electric">•</span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </>
-          ) : (
-            <div className="space-y-3">
-              <h3 className="text-2xl font-semibold">All tasks complete</h3>
-              <p className="text-sm text-slate-400">
-                You’ve cleared every action in this plan. Revisit categories anytime or add a new business from
-                the dashboard to keep the momentum going.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
 
       {message && (
         <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
@@ -332,12 +276,18 @@ export const BusinessExperience = ({
 };
 
 const ChecklistTaskRow = ({ task, completed, pending, onToggle }: TaskCardProps) => {
+  const [expanded, setExpanded] = useState(false);
   const affiliate = affiliateLinks[task.affiliate];
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <label className="relative inline-flex items-center">
+    <div
+      className={cn(
+        "rounded-xl border bg-black/30 px-4 py-3 transition-colors",
+        completed ? "border-electric/20" : "border-white/10"
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <label className="relative inline-flex items-center shrink-0">
             <input
               type="checkbox"
               checked={completed}
@@ -347,17 +297,21 @@ const ChecklistTaskRow = ({ task, completed, pending, onToggle }: TaskCardProps)
             />
             <span className="pointer-events-none absolute inset-0 rounded-md border border-white/30 peer-checked:border-electric/70" />
           </label>
-          <div>
-            <p className="text-lg font-semibold">
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="text-left min-w-0"
+          >
+            <p className={cn("text-sm font-semibold", completed && "line-through text-slate-500")}>
               {task.title}
               {task.priority && (
-                <span className="ml-2 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-300">
+                <span className="ml-2 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs text-amber-300 no-underline">
                   Priority
                 </span>
               )}
             </p>
-            <p className="text-sm text-slate-400">{task.why}</p>
-          </div>
+            <p className="text-xs text-slate-500 truncate">{task.why}</p>
+          </button>
         </div>
         <a
           href={affiliate.url}
@@ -365,25 +319,24 @@ const ChecklistTaskRow = ({ task, completed, pending, onToggle }: TaskCardProps)
           rel="noreferrer"
           className={cn(
             buttonVariants({ variant: "default", size: "sm" }),
-            "bg-electric text-black"
+            "bg-electric text-black shrink-0 text-xs"
           )}
         >
           {affiliate.label} ↗
         </a>
       </div>
-      <div className="mt-4">
-        <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-          How to do it
-        </p>
-        <ol className="mt-2 space-y-2 text-sm text-slate-300">
-          {task.how.map((step: string, index: number) => (
-            <li key={step} className="flex gap-3">
-              <span className="text-slate-500">{index + 1}.</span>
-              <span>{step}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
+      {expanded && (
+        <div className="mt-3 ml-8 border-t border-white/5 pt-3">
+          <ol className="space-y-1.5 text-sm text-slate-300">
+            {task.how.map((step: string, index: number) => (
+              <li key={step} className="flex gap-2">
+                <span className="text-slate-500 text-xs">{index + 1}.</span>
+                <span className="text-xs">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </div>
   );
 };

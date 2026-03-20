@@ -20,16 +20,16 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen">
       <TopNav email={profile.email} plan={profile.plan} />
-      <main className="mx-auto max-w-6xl px-4 py-10 space-y-10">
-        <section className="flex flex-wrap items-center justify-between gap-4">
+      <main className="mx-auto max-w-6xl px-4 py-8 space-y-8">
+        <section className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.5em] text-electric">
               Your readiness HQ
             </p>
-            <h1 className="text-4xl font-semibold">
-              Let’s get every business digital-ready
+            <h1 className="text-3xl font-semibold">
+              Let's get every business digital-ready
             </h1>
-            <p className="text-sm text-slate-400 mt-2">
+            <p className="text-sm text-slate-400 mt-1">
               Track progress, unlock playbooks, and keep each launch on pace.
             </p>
           </div>
@@ -67,30 +67,19 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        <section className="glass-panel p-8 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                Need guidance?
-              </p>
-              <h2 className="text-2xl font-semibold">Explore the roadmap</h2>
-              <p className="text-sm text-slate-400">
-                Each task has "why" and "how" steps, plus vetted tools to speed
-                things up. Visit a business to continue the wizard.
-              </p>
-            </div>
+        {businessesWithProgress.length > 0 && (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/5 bg-white/[0.03] px-5 py-3">
+            <p className="text-sm text-slate-400">
+              Each task has "why" and "how" steps, plus vetted tools to speed things up.
+            </p>
             <Link
-              href={
-                businessesWithProgress[0]?.business.id
-                  ? `/business/${businessesWithProgress[0].business.id}`
-                  : "#"
-              }
+              href={`/business/${businessesWithProgress[0].business.id}`}
               className="text-sm font-semibold text-electric hover:text-white"
             >
               Jump into latest business ↗
             </Link>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
     </div>
   );
