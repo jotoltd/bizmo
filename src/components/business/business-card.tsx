@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Business, PlanTier } from "@/types";
 import { Progress } from "@/components/ui/progress";
-import { cn, percent } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 export type BusinessCardProps = {
   business: Business;

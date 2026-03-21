@@ -4,15 +4,18 @@ import { envClient } from "@/lib/env-client";
 
 export const createSupabaseServerClient = async () => {
   const cookieStore = await cookies();
+  if (!envClient.supabaseUrl || !envClient.supabaseAnonKey) {
+    throw new Error("Missing Supabase configuration: SUPABASE_URL or SUPABASE_ANON_KEY");
+  }
   return createServerClient(envClient.supabaseUrl, envClient.supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;
       },
-      set(name: string, value: string, options: any) {
+      set(name: string, value: string, options: Record<string, unknown>) {
         cookieStore.set({ name, value, ...options });
       },
-      remove(name: string, options: any) {
+      remove(name: string, options: Record<string, unknown>) {
         cookieStore.delete({ name, ...options });
       },
     },

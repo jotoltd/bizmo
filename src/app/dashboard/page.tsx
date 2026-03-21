@@ -27,7 +27,7 @@ export default async function DashboardPage() {
               Your readiness HQ
             </p>
             <h1 className="text-3xl font-semibold">
-              Let's get every business digital-ready
+              Let&apos;s get every business digital-ready
             </h1>
             <p className="text-sm text-slate-400 mt-1">
               Track progress, unlock playbooks, and keep each launch on pace.
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         {businessesWithProgress.length > 0 && (
           <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/5 bg-white/[0.03] px-5 py-3">
             <p className="text-sm text-slate-400">
-              Each task has "why" and "how" steps, plus vetted tools to speed things up.
+              Each task has &ldquo;why&rdquo; and &ldquo;how&rdquo; steps, plus vetted tools to speed things up.
             </p>
             <Link
               href={`/business/${businessesWithProgress[0].business.id}`}
