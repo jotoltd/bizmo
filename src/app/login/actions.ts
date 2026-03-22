@@ -2,7 +2,7 @@
 
 import { envServer } from "@/lib/env-server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { sendVerificationEmail } from "@/lib/email/sendgrid";
+import { sendVerificationEmail } from "@/lib/email/resend";
 
 export const signUpAction = async (input: {
   email: string;
