@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { envClient } from "@/lib/env-client";
 import { Button } from "@/components/ui/button";
-import { signUpAction } from "@/app/login/actions";
+import { resendConfirmationAction, signUpAction } from "@/app/login/actions";
 
 type AuthMode = "sign-in" | "sign-up" | "reset";
 
@@ -80,16 +80,10 @@ export const AuthPanel = () => {
 
     startTransition(async () => {
       setMessage(null);
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email,
-        options: {
-          emailRedirectTo: `${envClient.siteUrl}/auth/callback?redirect=/dashboard`,
-        },
-      });
+      const result = await resendConfirmationAction({ email });
 
-      if (error) {
-        setMessage({ type: "error", text: error.message });
+      if (result?.error) {
+        setMessage({ type: "error", text: result.error });
         return;
       }
 
