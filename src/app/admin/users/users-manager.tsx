@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   updateUser,
@@ -14,6 +15,7 @@ import type { Profile } from "@/types";
 // ── Create User Form ─────────────────────────────────────
 
 function CreateUserForm({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -21,8 +23,13 @@ function CreateUserForm({ onClose }: { onClose: () => void }) {
       className="glass-panel space-y-4 p-5"
       action={(fd) => {
         startTransition(async () => {
-          await createUser(fd);
-          onClose();
+          try {
+            await createUser(fd);
+            onClose();
+            router.refresh();
+          } catch (error) {
+            alert(error instanceof Error ? error.message : "Failed to create user.");
+          }
         });
       }}
     >
@@ -81,6 +88,7 @@ function EditUserForm({
   user: Profile;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   return (
@@ -88,8 +96,13 @@ function EditUserForm({
       className="glass-panel space-y-4 p-5"
       action={(fd) => {
         startTransition(async () => {
-          await updateUser(fd);
-          onClose();
+          try {
+            await updateUser(fd);
+            onClose();
+            router.refresh();
+          } catch (error) {
+            alert(error instanceof Error ? error.message : "Failed to update user.");
+          }
         });
       }}
     >
@@ -163,6 +176,7 @@ export function UsersManager({
 }: {
   initialUsers: Profile[];
 }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -294,9 +308,14 @@ export function UsersManager({
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        startTransition(() =>
-                          suspendUser(user.id, !user.suspended)
-                        );
+                        startTransition(async () => {
+                          try {
+                            await suspendUser(user.id, !user.suspended);
+                            router.refresh();
+                          } catch (error) {
+                            alert(error instanceof Error ? error.message : "Failed to update suspension.");
+                          }
+                        });
                       }}
                     >
                       {user.suspended ? "Unsuspend" : "Suspend"}
@@ -306,7 +325,14 @@ export function UsersManager({
                       size="sm"
                       onClick={() => {
                         if (confirm(`Delete user ${user.email}?`)) {
-                          startTransition(() => deleteUser(user.id));
+                          startTransition(async () => {
+                            try {
+                              await deleteUser(user.id);
+                              router.refresh();
+                            } catch (error) {
+                              alert(error instanceof Error ? error.message : "Failed to delete user.");
+                            }
+                          });
                         }
                       }}
                     >

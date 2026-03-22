@@ -157,7 +157,8 @@ export async function updateUser(formData: FormData) {
   if (user_type) payload.user_type = user_type;
   if (suspended !== null) payload.suspended = suspended === "on";
 
-  await supabase.from("profiles").update(payload).eq("id", id);
+  const { error } = await supabase.from("profiles").update(payload).eq("id", id);
+  if (error) throw new Error(error.message);
   revalidatePath("/admin/users");
 }
 
@@ -177,20 +178,57 @@ export async function createUser(formData: FormData) {
   if (error) throw new Error(error.message);
 
   // Update profile with user_type
-  await admin.from("profiles").update({ user_type }).eq("id", data.user.id);
+  const { error: profileError } = await admin
+    .from("profiles")
+    .update({ user_type })
+    .eq("id", data.user.id);
+  if (profileError) throw new Error(profileError.message);
   revalidatePath("/admin/users");
 }
 
 export async function suspendUser(id: string, suspend: boolean) {
   const supabase = await guardAdmin();
-  await supabase.from("profiles").update({ suspended: suspend }).eq("id", id);
+  const { error } = await supabase
+    .from("profiles")
+    .update({ suspended: suspend })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
   revalidatePath("/admin/users");
 }
 
 export async function deleteUser(id: string) {
-  await requireAdmin();
+  const adminProfile = await requireAdmin();
+  if (!id) throw new Error("Missing user id");
+  if (id === adminProfile.id) {
+    throw new Error("You cannot delete your own admin account.");
+  }
+
   const admin = createSupabaseAdminClient();
-  await admin.auth.admin.deleteUser(id);
+
+  const { error: membershipsError } = await admin
+    .from("business_memberships")
+    .delete()
+    .eq("user_id", id);
+  if (membershipsError) throw new Error(membershipsError.message);
+
+  const { error: notificationsError } = await admin
+    .from("notifications")
+    .delete()
+    .eq("user_id", id);
+  if (notificationsError) throw new Error(notificationsError.message);
+
+  const { error: businessesError } = await admin
+    .from("businesses")
+    .delete()
+    .eq("user_id", id);
+  if (businessesError) throw new Error(businessesError.message);
+
+  const { error: profileError } = await admin.from("profiles").delete().eq("id", id);
+  if (profileError) throw new Error(profileError.message);
+
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) throw new Error(error.message);
+
   revalidatePath("/admin/users");
 }
 
