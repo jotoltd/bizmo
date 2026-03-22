@@ -3,14 +3,26 @@ const NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const NEXT_PUBLIC_SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-if (!NEXT_PUBLIC_SUPABASE_URL)
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable");
+function getSupabaseUrl(): string {
+  if (!NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable");
+  }
+  return NEXT_PUBLIC_SUPABASE_URL;
+}
 
-if (!NEXT_PUBLIC_SUPABASE_ANON_KEY)
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable");
+function getSupabaseAnonKey(): string {
+  if (!NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable");
+  }
+  return NEXT_PUBLIC_SUPABASE_ANON_KEY;
+}
 
 export const envClient = {
-  supabaseUrl: NEXT_PUBLIC_SUPABASE_URL,
-  supabaseAnonKey: NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  get supabaseUrl() {
+    return getSupabaseUrl();
+  },
+  get supabaseAnonKey() {
+    return getSupabaseAnonKey();
+  },
   siteUrl: NEXT_PUBLIC_SITE_URL,
 };
