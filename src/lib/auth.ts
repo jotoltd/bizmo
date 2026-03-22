@@ -37,7 +37,7 @@ export const getProfile = async (): Promise<Profile | null> => {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, plan")
+    .select("id, email, plan, role, user_type, last_active, suspended")
     .eq("id", session.user.id)
     .single();
 
@@ -52,5 +52,11 @@ export const getProfile = async (): Promise<Profile | null> => {
 export const requireProfile = async (): Promise<Profile> => {
   const profile = await getProfile();
   if (!profile) redirect("/login");
+  return profile;
+};
+
+export const requireAdmin = async (): Promise<Profile> => {
+  const profile = await requireProfile();
+  if (profile.role !== "admin") redirect("/dashboard");
   return profile;
 };

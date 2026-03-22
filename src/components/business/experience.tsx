@@ -86,6 +86,25 @@ export const BusinessExperience = ({
     [plan, completedSet, progress.percentage]
   );
 
+  const categoryProgress = useMemo(
+    () =>
+      categories.map((category) => {
+        const total = category.tasks.length;
+        const completed = category.tasks.filter((task) =>
+          completedSet.has(task.id)
+        ).length;
+        return {
+          id: category.id,
+          label: category.label,
+          description: category.description,
+          total,
+          completed,
+          percentage: total ? Math.round((completed / total) * 100) : 0,
+        };
+      }),
+    [categories, completedSet]
+  );
+
   const wizardTask = flatTasks[wizardIndex];
   const nextTask = wizardTask ?? flatTasks.find((task) => !completedSet.has(task.id));
 
@@ -169,6 +188,14 @@ export const BusinessExperience = ({
           ))}
         </div>
       </div>
+
+      {categoryProgress.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-3">
+          {categoryProgress.map((phase) => (
+            <PhaseCard key={phase.id} phase={phase} />
+          ))}
+        </div>
+      )}
 
       {/* Progress bar + badges row */}
       <div className="glass-panel p-5">
@@ -261,12 +288,13 @@ export const BusinessExperience = ({
         <WizardPanel
           task={wizardTask}
           completed={completedSet.has(wizardTask.id)}
-          onToggle={(checked) => handleTaskToggle(wizardTask.id, checked)}
           pending={pendingTask === wizardTask.id && taskPending}
           currentStep={wizardIndex + 1}
           totalSteps={flatTasks.length}
           onNext={() => setWizardIndex((prev) => Math.min(prev + 1, flatTasks.length - 1))}
           onPrev={() => setWizardIndex((prev) => Math.max(prev - 1, 0))}
+          upcomingTask={flatTasks[wizardIndex + 1]}
+          onToggle={(checked) => handleTaskToggle(wizardTask.id, checked)}
         />
       ) : (
         <p className="text-sm text-slate-400">No tasks available.</p>
@@ -341,6 +369,35 @@ const ChecklistTaskRow = ({ task, completed, pending, onToggle }: TaskCardProps)
   );
 };
 
+type PhaseProgress = {
+  id: string;
+  label: string;
+  description: string;
+  total: number;
+  completed: number;
+  percentage: number;
+};
+
+const PhaseCard = ({ phase }: { phase: PhaseProgress }) => (
+  <div className="glass-panel p-4 space-y-3">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+          {phase.label}
+        </p>
+        <p className="text-xs text-slate-500">{phase.description}</p>
+      </div>
+      <span className="text-sm text-slate-400">
+        {phase.completed}/{phase.total}
+      </span>
+    </div>
+    <Progress value={phase.percentage} className="h-2" />
+    <p className="text-xs text-slate-400">
+      {phase.percentage}% complete
+    </p>
+  </div>
+);
+
 const WizardPanel = ({
   task,
   completed,
@@ -350,6 +407,7 @@ const WizardPanel = ({
   totalSteps,
   onNext,
   onPrev,
+  upcomingTask,
 }: {
   task: WizardTask;
   completed: boolean;
@@ -359,15 +417,25 @@ const WizardPanel = ({
   totalSteps: number;
   onNext: () => void;
   onPrev: () => void;
+  upcomingTask?: WizardTask;
 }) => {
   const affiliate = affiliateLinks[task.affiliate];
+  const percentComplete = (currentStep / totalSteps) * 100;
   return (
     <div className="glass-panel p-8 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
-        <span>
-          Step {currentStep} of {totalSteps}
-        </span>
-        <span>{task.categoryLabel}</span>
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+          <span>
+            Step {currentStep} of {totalSteps}
+          </span>
+          <span>{task.categoryLabel}</span>
+        </div>
+        <Progress value={percentComplete} className="h-2" />
+        {upcomingTask && (
+          <p className="text-xs text-slate-500">
+            Next: <span className="text-slate-200">{upcomingTask.title}</span>
+          </p>
+        )}
       </div>
       <div className="space-y-3">
         <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
@@ -376,11 +444,11 @@ const WizardPanel = ({
         <h2 className="text-3xl font-semibold">{task.title}</h2>
         <p className="text-slate-300">{task.why}</p>
       </div>
-      <div className="rounded-2xl border border-white/10 bg-black/30 p-6">
+      <div className="rounded-2xl border border-white/10 bg-black/30 p-6 space-y-4">
         <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
           How to do it
         </p>
-        <ol className="mt-4 space-y-3 text-sm text-slate-200">
+        <ol className="space-y-3 text-sm text-slate-200">
           {task.how.map((step: string) => (
             <li key={step} className="flex gap-3">
               <span className="text-electric">•</span>
@@ -388,7 +456,16 @@ const WizardPanel = ({
             </li>
           ))}
         </ol>
-        <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-sm text-slate-300">
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-500 mb-2">
+            Context
+          </p>
+          <p>
+            Stay focused on the business outcome: complete this step to unlock the next milestone and keep
+            your launch crew aligned.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             onClick={() => onToggle(!completed)}
             disabled={pending}
@@ -413,9 +490,14 @@ const WizardPanel = ({
         <Button onClick={onPrev} variant="ghost" disabled={currentStep === 1}>
           Back
         </Button>
-        <Button onClick={onNext} disabled={currentStep === totalSteps}>
-          Next
-        </Button>
+        <div className="flex items-center gap-3">
+          <p className="text-xs text-slate-500">
+            {Math.min(currentStep + 1, totalSteps)} / {totalSteps}
+          </p>
+          <Button onClick={onNext} disabled={currentStep === totalSteps}>
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );

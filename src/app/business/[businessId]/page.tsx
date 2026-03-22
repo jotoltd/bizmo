@@ -19,7 +19,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
   return (
     <div className="min-h-screen">
-      <TopNav email={profile.email} plan={profile.plan} />
+      <TopNav email={profile.email} plan={profile.plan} role={profile.role} />
       <BusinessExperience business={business} plan={profile.plan} />
     </div>
   );

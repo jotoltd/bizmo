@@ -2,14 +2,16 @@ import Link from "next/link";
 import { PlanBadge } from "@/components/dashboard/plan-badge";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/app/actions";
-import type { PlanTier } from "@/types";
+import type { PlanTier, UserRole } from "@/types";
 
 export const TopNav = ({
   email,
   plan,
+  role,
 }: {
   email: string;
   plan: PlanTier;
+  role?: UserRole;
 }) => {
   const initial = email.charAt(0).toUpperCase();
   return (
@@ -26,6 +28,14 @@ export const TopNav = ({
         </Link>
         <div className="flex items-center gap-4">
           <PlanBadge plan={plan} />
+          {role === "admin" && (
+            <Link
+              href="/admin"
+              className="hidden text-sm font-medium text-electric transition hover:text-white sm:block"
+            >
+              Admin panel →
+            </Link>
+          )}
           {plan === "free" && (
             <Link
               href="/upgrade"

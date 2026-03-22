@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Sora, Manrope, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -10,8 +10,13 @@ import "./globals.css";
  * - Tailwind + utility primitives for rapid iteration on a dark, responsive UI.
  */
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const bodySans = Manrope({
+  variable: "--font-body-sans",
+  subsets: ["latin"],
+});
+
+const displaySans = Sora({
+  variable: "--font-display-sans",
   subsets: ["latin"],
 });
 
@@ -34,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${bodySans.variable} ${displaySans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-void text-slate-100">
         {children}
