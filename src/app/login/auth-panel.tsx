@@ -13,6 +13,7 @@ export const AuthPanel = () => {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("sign-in");
+  const [emailInput, setEmailInput] = useState("");
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(
     null
   );
@@ -21,7 +22,7 @@ export const AuthPanel = () => {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
     const password = String(formData.get("password") ?? "");
 
     startTransition(async () => {
@@ -70,6 +71,35 @@ export const AuthPanel = () => {
     });
   };
 
+  const handleResendConfirmation = () => {
+    const email = emailInput.trim().toLowerCase();
+    if (!email) {
+      setMessage({ type: "error", text: "Enter your email first, then resend the confirmation link." });
+      return;
+    }
+
+    startTransition(async () => {
+      setMessage(null);
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${envClient.siteUrl}/auth/callback?redirect=/dashboard`,
+        },
+      });
+
+      if (error) {
+        setMessage({ type: "error", text: error.message });
+        return;
+      }
+
+      setMessage({
+        type: "success",
+        text: `Confirmation link sent to ${email}. Check your inbox and spam folder.`,
+      });
+    });
+  };
+
   const heading =
     mode === "sign-in"
       ? "Digital readiness begins here"
@@ -110,6 +140,8 @@ export const AuthPanel = () => {
               name="email"
               type="email"
               required
+              value={emailInput}
+              onChange={(event) => setEmailInput(event.target.value)}
               placeholder="you@company.com"
               className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white placeholder:text-slate-500 focus:border-electric focus:outline-none"
             />
@@ -155,6 +187,14 @@ export const AuthPanel = () => {
                 className="block text-electric hover:text-white"
               >
                 Forgot password?
+              </button>
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                className="block text-electric hover:text-white"
+                disabled={isPending}
+              >
+                Resend confirmation link
               </button>
             </>
           )}
