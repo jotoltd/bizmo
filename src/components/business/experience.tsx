@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { FormEvent, useMemo, useState, useTransition } from "react";
 import { affiliateLinks } from "@/data/affiliates";
 import type { ChecklistTask } from "@/data/checklist";
 import {
@@ -11,8 +11,9 @@ import {
 import { cn, percent } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import type { Business, PlanTier } from "@/types";
+import type { Business, BusinessTeamMember, PlanTier } from "@/types";
 import {
+  inviteBusinessMemberAction,
   toggleTaskCompletionAction,
   updateBusinessViewAction,
 } from "@/app/dashboard/actions";
@@ -38,9 +39,15 @@ type WizardTask = ChecklistTask & {
 export const BusinessExperience = ({
   business,
   plan,
+  team,
+  canManageTeam,
+  showOnboarding,
 }: {
   business: Business;
   plan: PlanTier;
+  team: BusinessTeamMember[];
+  canManageTeam: boolean;
+  showOnboarding?: boolean;
 }) => {
   const categories = useMemo(() => getCategoriesForPlan(plan), [plan]);
   const flatTasks = useMemo<WizardTask[]>(() => {
@@ -67,7 +74,11 @@ export const BusinessExperience = ({
     return firstIncomplete >= 0 ? firstIncomplete : 0;
   });
   const [message, setMessage] = useState<string | null>(null);
+  const [teamMembers, setTeamMembers] = useState<BusinessTeamMember[]>(team);
+  const [teammateEmail, setTeammateEmail] = useState("");
+  const [teamMessage, setTeamMessage] = useState<string | null>(null);
   const [pendingTask, setPendingTask] = useState<string | null>(null);
+  const [invitePending, startInviteTransition] = useTransition();
   const [viewPending, startViewTransition] = useTransition();
   const [taskPending, startTaskTransition] = useTransition();
 
@@ -104,6 +115,37 @@ export const BusinessExperience = ({
       }),
     [categories, completedSet]
   );
+
+  const handleInviteSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const email = teammateEmail.trim().toLowerCase();
+    if (!email) return;
+
+    startInviteTransition(async () => {
+      setTeamMessage(null);
+      const result = await inviteBusinessMemberAction({
+        businessId: business.id,
+        email,
+      });
+
+      if (result?.error) {
+        setTeamMessage(result.error);
+        return;
+      }
+
+      setTeamMembers((prev) => [
+        ...prev,
+        {
+          user_id: `local-${email}`,
+          email,
+          role: "member",
+          created_at: new Date().toISOString(),
+        },
+      ]);
+      setTeammateEmail("");
+      setTeamMessage("Teammate added to this business.");
+    });
+  };
 
   const wizardTask = flatTasks[wizardIndex];
   const nextTask = wizardTask ?? flatTasks.find((task) => !completedSet.has(task.id));
@@ -188,6 +230,59 @@ export const BusinessExperience = ({
           ))}
         </div>
       </div>
+
+      {showOnboarding && (
+        <section className="glass-panel rounded-2xl border-electric/30 bg-electric/10 p-5">
+          <p className="text-xs uppercase tracking-[0.35em] text-electric">New business onboarding</p>
+          <h2 className="mt-2 text-xl font-semibold text-white">Nice — your business is ready.</h2>
+          <div className="mt-3 grid gap-3 text-sm text-slate-200 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">1) Pick checklist or wizard view</div>
+            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">2) Complete your first 3 tasks</div>
+            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">3) Add teammates to keep momentum</div>
+          </div>
+        </section>
+      )}
+
+      <section className="glass-panel p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Team</p>
+            <h2 className="text-lg font-semibold text-white">People in this business</h2>
+          </div>
+          <span className="text-sm text-slate-400">{teamMembers.length} member(s)</span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {teamMembers.map((member) => (
+            <span
+              key={`${member.user_id}-${member.email}`}
+              className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-300"
+            >
+              {member.email} · {member.role}
+            </span>
+          ))}
+        </div>
+
+        {canManageTeam && (
+          <form onSubmit={handleInviteSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <input
+              type="email"
+              value={teammateEmail}
+              onChange={(event) => setTeammateEmail(event.target.value)}
+              placeholder="teammate@company.com"
+              className="h-10 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-slate-500 focus:border-electric focus:outline-none"
+              required
+            />
+            <Button type="submit" disabled={invitePending} className="sm:w-auto">
+              {invitePending ? "Adding..." : "Add teammate"}
+            </Button>
+          </form>
+        )}
+
+        {teamMessage && (
+          <p className="text-sm text-slate-300">{teamMessage}</p>
+        )}
+      </section>
 
       {categoryProgress.length > 0 && (
         <div className="grid gap-4 md:grid-cols-3">

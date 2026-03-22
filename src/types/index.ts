@@ -25,6 +25,24 @@ export type Business = {
   created_at: string;
 };
 
+export type BusinessMembershipRole = "owner" | "member";
+
+export type BusinessMembership = {
+  id: string;
+  business_id: string;
+  user_id: string;
+  role: BusinessMembershipRole;
+  invited_by: string | null;
+  created_at: string;
+};
+
+export type BusinessTeamMember = {
+  user_id: string;
+  email: string;
+  role: BusinessMembershipRole;
+  created_at: string;
+};
+
 export type RoadmapPhase = {
   id: string;
   title: string;

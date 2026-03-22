@@ -50,24 +50,11 @@ export const AuthPanel = () => {
           return;
         }
 
-        // User created server-side; now sign in client-side to set session cookie
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        setMessage({
+          type: "success",
+          text: "Account created. Check your email and verify your account before signing in.",
         });
-
-        if (signInError) {
-          setMessage({
-            type: "error",
-            text: "Account created but sign-in failed. Please sign in manually.",
-          });
-          setMode("sign-in");
-          return;
-        }
-
-        setMessage({ type: "success", text: "Account created. Redirecting..." });
-        router.push("/dashboard");
-        router.refresh();
+        setMode("sign-in");
         return;
       }
 

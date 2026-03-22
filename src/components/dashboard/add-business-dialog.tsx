@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { BUSINESS_TYPES } from "@/data/business-types";
 import { createBusinessAction } from "@/app/dashboard/actions";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,9 @@ export const AddBusinessDialog = ({
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [onboardingPath, setOnboardingPath] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const defaultType = useMemo(() => BUSINESS_TYPES[0], []);
 
@@ -27,11 +30,12 @@ export const AddBusinessDialog = ({
       const result = await createBusinessAction({ name, type });
       if (result?.error) {
         setSuccess(false);
+        setOnboardingPath(null);
         setError(result.error);
         return;
       }
       setSuccess(true);
-      setOpen(false);
+      setOnboardingPath(result?.onboardingPath ?? null);
     });
   };
 
@@ -96,9 +100,22 @@ export const AddBusinessDialog = ({
                 </p>
               )}
               {success && (
-                <p className="text-sm text-emerald-400">
-                  Business created. You can close this modal.
-                </p>
+                <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+                  <p>Business created. Let&apos;s get onboarding started.</p>
+                  {onboardingPath && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        router.push(onboardingPath);
+                        router.refresh();
+                      }}
+                      className="mt-2 text-emerald-200 underline underline-offset-4 hover:text-white"
+                    >
+                      Open business onboarding →
+                    </button>
+                  )}
+                </div>
               )}
               <div className="flex gap-3">
                 <Button type="submit" disabled={isPending} className="flex-1">

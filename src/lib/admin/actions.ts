@@ -208,8 +208,8 @@ export async function getBusinessesByUser(userId: string) {
   const supabase = await guardAdmin();
   const { data } = await supabase
     .from("businesses")
-    .select("*")
-    .eq("user_id", userId)
+    .select("*, business_memberships!inner(user_id)")
+    .eq("business_memberships.user_id", userId)
     .order("created_at", { ascending: false });
   return data ?? [];
 }
@@ -223,6 +223,16 @@ export async function reassignBusiness(formData: FormData) {
     .from("businesses")
     .update({ user_id: targetUserId })
     .eq("id", businessId);
+
+  await supabase.from("business_memberships").upsert(
+    {
+      business_id: businessId,
+      user_id: targetUserId,
+      role: "owner",
+      invited_by: targetUserId,
+    },
+    { onConflict: "business_id,user_id" }
+  );
 
   revalidatePath("/admin/users");
 }
@@ -241,6 +251,25 @@ export async function mergeUsers(formData: FormData) {
     .from("businesses")
     .update({ user_id: targetUserId })
     .eq("user_id", sourceUserId);
+
+  const { data: sourceMemberships } = await admin
+    .from("business_memberships")
+    .select("business_id, role")
+    .eq("user_id", sourceUserId);
+
+  if (sourceMemberships?.length) {
+    await admin.from("business_memberships").upsert(
+      sourceMemberships.map((membership) => ({
+        business_id: membership.business_id,
+        user_id: targetUserId,
+        role: membership.role,
+        invited_by: targetUserId,
+      })),
+      { onConflict: "business_id,user_id" }
+    );
+
+    await admin.from("business_memberships").delete().eq("user_id", sourceUserId);
+  }
 
   await admin.from("notifications").delete().eq("user_id", sourceUserId);
   await admin.from("profiles").delete().eq("id", sourceUserId);

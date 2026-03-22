@@ -35,18 +35,111 @@ export const createBusinessAction = async (
     }
   }
 
-  const { error } = await supabase.from("businesses").insert({
+  const { data: business, error } = await supabase
+    .from("businesses")
+    .insert({
     user_id: user.id,
     name: parsed.data.name.trim(),
     type: parsed.data.type,
-  });
+    })
+    .select("id")
+    .single();
 
   if (error) {
     console.error("Failed to create business", error.message);
     return { error: "Something went wrong while creating your business." };
   }
 
+  if (!business) {
+    return { error: "Business created but onboarding could not start." };
+  }
+
+  await supabase.from("business_memberships").upsert(
+    {
+      business_id: business.id,
+      user_id: user.id,
+      role: "owner",
+      invited_by: user.id,
+    },
+    { onConflict: "business_id,user_id" }
+  );
+
   revalidatePath("/dashboard");
+  return {
+    success: true,
+    businessId: business.id,
+    onboardingPath: `/business/${business.id}?onboarding=1`,
+  };
+};
+
+const inviteBusinessMemberSchema = z.object({
+  businessId: z.string().uuid(),
+  email: z.string().email(),
+});
+
+export const inviteBusinessMemberAction = async (
+  input: z.infer<typeof inviteBusinessMemberSchema>
+) => {
+  const parsed = inviteBusinessMemberSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: "Please provide a valid teammate email." };
+  }
+
+  const user = await requireUser();
+  const supabase = await createSupabaseServerClient();
+
+  const { data: business } = await supabase
+    .from("businesses")
+    .select("id, user_id")
+    .eq("id", parsed.data.businessId)
+    .maybeSingle();
+
+  if (!business) {
+    return { error: "Business not found." };
+  }
+
+  if (business.user_id !== user.id) {
+    return { error: "Only the business owner can add teammates." };
+  }
+
+  const normalizedEmail = parsed.data.email.toLowerCase().trim();
+  const { data: targetProfile } = await supabase
+    .from("profiles")
+    .select("id, email")
+    .ilike("email", normalizedEmail)
+    .maybeSingle();
+
+  if (!targetProfile) {
+    return {
+      error: "No account found with that email yet. Ask them to create an account first.",
+    };
+  }
+
+  const { data: existingMembership } = await supabase
+    .from("business_memberships")
+    .select("id")
+    .eq("business_id", parsed.data.businessId)
+    .eq("user_id", targetProfile.id)
+    .maybeSingle();
+
+  if (existingMembership) {
+    return { error: "That teammate is already in this business." };
+  }
+
+  const { error: insertError } = await supabase.from("business_memberships").insert({
+    business_id: parsed.data.businessId,
+    user_id: targetProfile.id,
+    role: "member",
+    invited_by: user.id,
+  });
+
+  if (insertError) {
+    console.error("Failed to invite teammate", insertError.message);
+    return { error: "Could not add teammate right now." };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/business/${parsed.data.businessId}`);
   return { success: true };
 };
 
@@ -63,11 +156,33 @@ export const updateBusinessViewAction = async (
 
   const user = await requireUser();
   const supabase = await createSupabaseServerClient();
+  const { data: business, error: businessError } = await supabase
+    .from("businesses")
+    .select("id, user_id")
+    .eq("id", parsed.data.businessId)
+    .maybeSingle();
+
+  if (businessError || !business) {
+    return { error: "Business not found." };
+  }
+
+  if (business.user_id !== user.id) {
+    const { data: membership } = await supabase
+      .from("business_memberships")
+      .select("id")
+      .eq("business_id", parsed.data.businessId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!membership) {
+      return { error: "Business not found." };
+    }
+  }
+
   const { error } = await supabase
     .from("businesses")
     .update({ view_preference: parsed.data.view })
-    .eq("id", parsed.data.businessId)
-    .eq("user_id", user.id);
+    .eq("id", parsed.data.businessId);
 
   if (error) {
     console.error("Failed to update view preference", error.message);
@@ -96,12 +211,24 @@ export const toggleTaskCompletionAction = async (
     .from("businesses")
     .select("id, user_id, completed_tasks")
     .eq("id", parsed.data.businessId)
-    .eq("user_id", user.id)
     .single();
 
   if (fetchError || !business) {
     console.error("Failed to load business", fetchError?.message);
     return { error: "Business not found." };
+  }
+
+  if (business.user_id !== user.id) {
+    const { data: membership } = await supabase
+      .from("business_memberships")
+      .select("id")
+      .eq("business_id", parsed.data.businessId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!membership) {
+      return { error: "Business not found." };
+    }
   }
 
   const availableTasks = getTasksForPlan(profile.plan).map((task) => task.id);
@@ -117,8 +244,7 @@ export const toggleTaskCompletionAction = async (
   const { error: updateError } = await supabase
     .from("businesses")
     .update({ completed_tasks: updatedTasks })
-    .eq("id", parsed.data.businessId)
-    .eq("user_id", user.id);
+    .eq("id", parsed.data.businessId);
 
   if (updateError) {
     console.error("Failed to update tasks", updateError.message);
