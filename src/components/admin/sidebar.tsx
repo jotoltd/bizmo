@@ -7,12 +7,18 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
   { href: "/admin/analytics", label: "Analytics", icon: "📈" },
+  { href: "/admin/health", label: "System Health", icon: "❤️" },
+  { href: "/admin/audit", label: "Audit Logs", icon: "📋" },
+  { href: "/admin/security", label: "Security", icon: "🔒" },
   { href: "/admin/roadmap", label: "Roadmap", icon: "🗺️" },
-  { href: "/admin/roadmap/preview", label: "Roadmap Preview", icon: "🧪" },
+  { href: "/admin/roadmap/preview", label: "Preview", icon: "🧪" },
   { href: "/admin/users", label: "Users", icon: "👥" },
   { href: "/admin/businesses", label: "Businesses", icon: "🏢" },
-  { href: "/admin/settings", label: "Settings", icon: "⚙️" },
+  { href: "/admin/support", label: "Support", icon: "🎫" },
   { href: "/admin/comms", label: "Comms", icon: "🔔" },
+  { href: "/admin/campaigns", label: "Campaigns", icon: "📧" },
+  { href: "/admin/billing", label: "Billing", icon: "💳" },
+  { href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ] as const;
 
 export const AdminSidebar = () => {
