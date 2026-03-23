@@ -18,21 +18,29 @@ export async function getAuditLogs(filters?: {
   const supabase = await createSupabaseServerClient();
   await requireAdmin();
 
-  let query = supabase
-    .from("admin_audit_logs")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(filters?.limit ?? 100);
+  try {
+    let query = supabase
+      .from("admin_audit_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(filters?.limit ?? 100);
 
-  if (filters?.action) query = query.eq("action", filters.action);
-  if (filters?.adminId) query = query.eq("admin_id", filters.adminId);
-  if (filters?.targetType) query = query.eq("target_type", filters.targetType);
-  if (filters?.dateFrom) query = query.gte("created_at", filters.dateFrom);
-  if (filters?.dateTo) query = query.lte("created_at", filters.dateTo);
+    if (filters?.action) query = query.eq("action", filters.action);
+    if (filters?.adminId) query = query.eq("admin_id", filters.adminId);
+    if (filters?.targetType) query = query.eq("target_type", filters.targetType);
+    if (filters?.dateFrom) query = query.gte("created_at", filters.dateFrom);
+    if (filters?.dateTo) query = query.lte("created_at", filters.dateTo);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+    const { data, error } = await query;
+    if (error) {
+      console.error("Audit logs query error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (e) {
+    console.error("Audit logs error:", e);
+    return [];
+  }
 }
 
 export async function getAuditActions() {
@@ -61,20 +69,28 @@ export async function getLoginHistory(filters?: {
   const supabase = await createSupabaseServerClient();
   await requireAdmin();
 
-  let query = supabase
-    .from("login_history")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(filters?.limit ?? 100);
+  try {
+    let query = supabase
+      .from("login_history")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(filters?.limit ?? 100);
 
-  if (filters?.userId) query = query.eq("user_id", filters.userId);
-  if (filters?.eventType) query = query.eq("event_type", filters.eventType);
-  if (filters?.dateFrom) query = query.gte("created_at", filters.dateFrom);
-  if (filters?.dateTo) query = query.lte("created_at", filters.dateTo);
+    if (filters?.userId) query = query.eq("user_id", filters.userId);
+    if (filters?.eventType) query = query.eq("event_type", filters.eventType);
+    if (filters?.dateFrom) query = query.gte("created_at", filters.dateFrom);
+    if (filters?.dateTo) query = query.lte("created_at", filters.dateTo);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+    const { data, error } = await query;
+    if (error) {
+      console.error("Login history query error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (e) {
+    console.error("Login history error:", e);
+    return [];
+  }
 }
 
 export async function getFailedLoginsLast24h() {
@@ -108,20 +124,28 @@ export async function getSupportTickets(filters?: {
   const supabase = await createSupabaseServerClient();
   await requireAdmin();
 
-  let query = supabase
-    .from("support_tickets")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(filters?.limit ?? 50);
+  try {
+    let query = supabase
+      .from("support_tickets")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(filters?.limit ?? 50);
 
-  if (filters?.status) query = query.eq("status", filters.status);
-  if (filters?.priority) query = query.eq("priority", filters.priority);
-  if (filters?.category) query = query.eq("category", filters.category);
-  if (filters?.assignedTo) query = query.eq("assigned_to", filters.assignedTo);
+    if (filters?.status) query = query.eq("status", filters.status);
+    if (filters?.priority) query = query.eq("priority", filters.priority);
+    if (filters?.category) query = query.eq("category", filters.category);
+    if (filters?.assignedTo) query = query.eq("assigned_to", filters.assignedTo);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+    const { data, error } = await query;
+    if (error) {
+      console.error("Support tickets query error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (e) {
+    console.error("Support tickets error:", e);
+    return [];
+  }
 }
 
 export async function getSupportTicketById(ticketId: string) {
@@ -237,39 +261,75 @@ export async function getCurrentSystemStats() {
   const supabase = await createSupabaseServerClient();
   await requireAdmin();
 
-  // Aggregate stats from various tables
-  const [
-    usersRes,
-    businessesRes,
-    ticketsRes,
-    recentLoginsRes,
-    failedLoginsRes,
-  ] = await Promise.all([
-    supabase.from("profiles").select("id, last_active", { count: "exact", head: true }),
-    supabase.from("businesses").select("id", { count: "exact", head: true }),
-    supabase
-      .from("support_tickets")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "open"),
-    supabase
-      .from("login_history")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-    supabase
-      .from("login_history")
-      .select("id", { count: "exact", head: true })
-      .eq("event_type", "failed_login")
-      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-  ]);
-
-  return {
-    totalUsers: usersRes.count ?? 0,
-    activeUsers24h: usersRes.count ?? 0, // Simplified
-    totalBusinesses: businessesRes.count ?? 0,
-    openTickets: ticketsRes.count ?? 0,
-    logins24h: recentLoginsRes.count ?? 0,
-    failedLogins24h: failedLoginsRes.count ?? 0,
+  const safeQuery = async (table: string, queryFn: () => Promise<{ count: number | null; error?: unknown }>) => {
+    try {
+      const result = await queryFn();
+      return result.count ?? 0;
+    } catch (e) {
+      console.error(`${table} query error:`, e);
+      return 0;
+    }
   };
+
+  try {
+    const usersRes = await supabase.from("profiles").select("id, last_active", { count: "exact", head: true });
+    const businessesRes = await supabase.from("businesses").select("id", { count: "exact", head: true });
+
+    // These tables may not exist yet, so we wrap them safely
+    let openTickets = 0;
+    let logins24h = 0;
+    let failedLogins24h = 0;
+
+    try {
+      const ticketsRes = await supabase
+        .from("support_tickets")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "open");
+      openTickets = ticketsRes.count ?? 0;
+    } catch (e) {
+      console.error("Support tickets table not ready:", e);
+    }
+
+    try {
+      const recentLoginsRes = await supabase
+        .from("login_history")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      logins24h = recentLoginsRes.count ?? 0;
+    } catch (e) {
+      console.error("Login history table not ready:", e);
+    }
+
+    try {
+      const failedLoginsRes = await supabase
+        .from("login_history")
+        .select("id", { count: "exact", head: true })
+        .eq("event_type", "failed_login")
+        .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      failedLogins24h = failedLoginsRes.count ?? 0;
+    } catch (e) {
+      console.error("Failed logins query error:", e);
+    }
+
+    return {
+      totalUsers: usersRes.count ?? 0,
+      activeUsers24h: usersRes.count ?? 0,
+      totalBusinesses: businessesRes.count ?? 0,
+      openTickets,
+      logins24h,
+      failedLogins24h,
+    };
+  } catch (e) {
+    console.error("System stats error:", e);
+    return {
+      totalUsers: 0,
+      activeUsers24h: 0,
+      totalBusinesses: 0,
+      openTickets: 0,
+      logins24h: 0,
+      failedLogins24h: 0,
+    };
+  }
 }
 
 // ── Rate Limiting ─────────────────────────────────────────
@@ -278,13 +338,21 @@ export async function getRateLimitConfigs() {
   const supabase = await createSupabaseServerClient();
   await requireAdmin();
 
-  const { data, error } = await supabase
-    .from("rate_limit_config")
-    .select("*")
-    .order("endpoint_pattern");
+  try {
+    const { data, error } = await supabase
+      .from("rate_limit_config")
+      .select("*")
+      .order("endpoint_pattern");
 
-  if (error) throw new Error(error.message);
-  return data ?? [];
+    if (error) {
+      console.error("Rate limit config query error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (e) {
+    console.error("Rate limit config error:", e);
+    return [];
+  }
 }
 
 export async function upsertRateLimitConfig(formData: FormData) {
@@ -327,16 +395,24 @@ export async function getEmailCampaigns(status?: string) {
   const supabase = await createSupabaseServerClient();
   await requireAdmin();
 
-  let query = supabase
-    .from("email_campaigns")
-    .select("*")
-    .order("created_at", { ascending: false });
+  try {
+    let query = supabase
+      .from("email_campaigns")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-  if (status) query = query.eq("status", status);
+    if (status) query = query.eq("status", status);
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-  return data ?? [];
+    const { data, error } = await query;
+    if (error) {
+      console.error("Email campaigns query error:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (e) {
+    console.error("Email campaigns error:", e);
+    return [];
+  }
 }
 
 export async function getEmailCampaignById(id: string) {
