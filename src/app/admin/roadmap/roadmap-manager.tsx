@@ -203,6 +203,27 @@ function StepForm({
         </div>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1">
+          <label className="text-xs text-slate-400">Affiliate Link URL</label>
+          <input
+            name="affiliate_link"
+            defaultValue={step?.affiliate_link ?? ""}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-electric focus:outline-none"
+            placeholder="https://shopify.com/..."
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs text-slate-400">Affiliate Link Text</label>
+          <input
+            name="affiliate_name"
+            defaultValue={step?.affiliate_name ?? ""}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-electric focus:outline-none"
+            placeholder="Get 20% off with Shopify"
+          />
+        </div>
+      </div>
+
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
           {step ? "Update Step" : "Create Step"}
@@ -335,7 +356,7 @@ export function RoadmapManager({
                             <p className="text-sm font-medium text-white">
                               {step.title}
                             </p>
-                            <div className="flex items-center gap-2 mt-0.5">
+                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                               <span
                                 className={`inline-block rounded-full px-2 py-0.5 text-[0.6rem] font-semibold uppercase ${
                                   step.status === "published"
@@ -352,7 +373,17 @@ export function RoadmapManager({
                                   Required
                                 </span>
                               )}
+                              {step.affiliate_link && (
+                                <span className="text-[0.6rem] text-amber-400 font-semibold uppercase">
+                                  Affiliate
+                                </span>
+                              )}
                             </div>
+                            {step.affiliate_link && (
+                              <p className="text-[0.6rem] text-slate-500 mt-0.5">
+                                {step.affiliate_name || step.affiliate_link.slice(0, 40)}...
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex gap-2">

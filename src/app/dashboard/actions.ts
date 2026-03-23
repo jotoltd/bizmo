@@ -22,19 +22,7 @@ export const createBusinessAction = async (
   const [user, profile] = await Promise.all([requireUser(), requireProfile()]);
   const supabase = await createSupabaseServerClient();
 
-  if (profile.plan === "free") {
-    const { count } = await supabase
-      .from("businesses")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id);
-
-    if ((count ?? 0) >= 1) {
-      return {
-        error: "The Free plan allows 1 business. Upgrade to Pro for unlimited brands.",
-      };
-    }
-  }
-
+  // App is completely free - no business limits
   const { data: business, error } = await supabase
     .from("businesses")
     .insert({
@@ -232,9 +220,10 @@ export const toggleTaskCompletionAction = async (
   }
 
   const availableTasks = getTasksForPlan(profile.plan).map((task) => task.id);
-  if (!availableTasks.includes(parsed.data.taskId)) {
-    return { error: "This task is not available on your current plan." };
-  }
+  // All tasks available for free - no plan restrictions
+  // if (!availableTasks.includes(parsed.data.taskId)) {
+  //   return { error: "This task is not available on your current plan." };
+  // }
 
   const currentTasks = new Set<string>(business.completed_tasks ?? []);
   if (parsed.data.completed) currentTasks.add(parsed.data.taskId);

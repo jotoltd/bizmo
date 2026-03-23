@@ -59,6 +59,8 @@ export type RoadmapStep = {
   description: string | null;
   why: string | null;
   how: string[];
+  affiliate_link: string | null;
+  affiliate_name: string | null;
   mandatory: boolean;
   status: RoadmapStepStatus;
   publish_at: string | null;

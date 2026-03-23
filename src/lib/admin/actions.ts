@@ -67,6 +67,8 @@ export async function upsertStep(formData: FormData) {
     description: formData.get("description") as string,
     why: formData.get("why") as string,
     how: howRaw ? howRaw.split("\n").filter(Boolean) : [],
+    affiliate_link: formData.get("affiliate_link") as string | null,
+    affiliate_name: formData.get("affiliate_name") as string | null,
     mandatory: formData.get("mandatory") === "on",
     status: (formData.get("status") as string) || "draft",
     publish_at: (formData.get("publish_at") as string) || null,
