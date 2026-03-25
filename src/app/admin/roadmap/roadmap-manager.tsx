@@ -290,6 +290,7 @@ export function RoadmapManager({
 
         {showPhaseForm && (
           <PhaseForm
+            key={editingPhase?.id ?? "new-phase"}
             phase={editingPhase}
             onClose={() => {
               setShowPhaseForm(false);
@@ -433,6 +434,7 @@ export function RoadmapManager({
         </div>
         {showStepForm && (
           <StepForm
+            key={editingStep?.id ?? "new-step"}
             step={editingStep}
             phases={phases}
             onClose={() => {

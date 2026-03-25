@@ -25,7 +25,7 @@ export type Business = {
   created_at: string;
 };
 
-export type BusinessMembershipRole = "owner" | "member";
+export type BusinessMembershipRole = "owner" | "admin" | "member";
 
 export type BusinessMembership = {
   id: string;
@@ -41,6 +41,22 @@ export type BusinessTeamMember = {
   email: string;
   role: BusinessMembershipRole;
   created_at: string;
+};
+
+export type BusinessInvitationStatus = "pending" | "accepted" | "rejected" | "cancelled";
+
+export type BusinessInvitation = {
+  id: string;
+  business_id: string;
+  invited_user_id: string;
+  invited_email: string;
+  invited_by: string;
+  invited_by_email?: string;
+  role: BusinessMembershipRole;
+  status: BusinessInvitationStatus;
+  responded_at: string | null;
+  created_at: string;
+  business_name?: string;
 };
 
 export type RoadmapPhase = {
@@ -107,6 +123,51 @@ export type Notification = {
   body: string | null;
   read: boolean;
   created_at: string;
+};
+
+export type BusinessActivityLog = {
+  id: string;
+  business_id: string;
+  user_id: string | null;
+  action: 'member_invited' | 'member_joined' | 'member_removed' | 'role_changed' | 'ownership_transferred' | 'invitation_cancelled' | 'invitation_expired' | 'invitation_resent';
+  target_user_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+};
+
+export type UserNotification = {
+  id: string;
+  user_id: string;
+  type:
+    | 'invitation_received'
+    | 'invitation_accepted'
+    | 'invitation_rejected'
+    | 'invitation_expired'
+    | 'member_removed'
+    | 'role_changed'
+    | 'ownership_transferred'
+    | 'announcement'
+    | 'system_alert'
+    | 'business_update'
+    | 'deadline_approaching'
+    | 'deadline_missed'
+    | 'task_completed'
+    | 'task_assigned';
+  title: string;
+  body: string | null;
+  data: Record<string, unknown>;
+  read: boolean;
+  read_at: string | null;
+  created_at: string;
+};
+
+export type UserEmailPreferences = {
+  user_id: string;
+  invitation_emails: boolean;
+  invitation_response_emails: boolean;
+  activity_emails: boolean;
+  announcement_emails: boolean;
+  updated_at: string;
 };
 
 export type SubscriptionPlan = {

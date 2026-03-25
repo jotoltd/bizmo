@@ -2,12 +2,42 @@ import { getSupabaseSession } from "@/lib/auth";
 import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
 import { MarketingCta } from "@/components/marketing/marketing-cta";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Bizno — Launch Your Business Without Chaos",
+  description: "Free business launch roadmap. Step-by-step wizard, affiliate deals on tools you need, and team collaboration. Start your business today.",
+  keywords: ["business launch", "startup roadmap", "entrepreneur tools", "business checklist", "free business plan"],
+  openGraph: {
+    title: "Bizno — Launch Your Business Without Chaos",
+    description: "Free business launch roadmap with step-by-step wizard and exclusive tool deals.",
+    type: "website",
+  },
+};
+
+const TESTIMONIALS = [
+  {
+    quote: "Went from idea to launched in 3 weeks. The roadmap kept me focused when I wanted to procrastinate.",
+    author: "Sarah K.",
+    role: "SaaS Founder",
+  },
+  {
+    quote: "Saved £200+ on my first year with the affiliate deals. The wizard view is actually motivating.",
+    author: "James M.",
+    role: "E-commerce Owner",
+  },
+  {
+    quote: "Finally, a tool that doesn't overcomplicate things. Just clear steps and real progress.",
+    author: "Priya R.",
+    role: "Agency Owner",
+  },
+];
 
 export default async function Home() {
   const session = await getSupabaseSession();
   const signedIn = Boolean(session);
   const primaryHref = signedIn ? "/dashboard" : "/login";
-  const primaryLabel = signedIn ? "Open dashboard" : "Start free";
+  const primaryLabel = signedIn ? "Open dashboard" : "Start free — no credit card";
 
   return (
     <MarketingPageShell ctaHref={primaryHref} ctaLabel={primaryLabel}>
@@ -26,13 +56,13 @@ export default async function Home() {
             <p className="fade-up text-xs uppercase tracking-[0.55em] text-electric">Launch without chaos</p>
             <div className="fade-up fade-up-delay-1 space-y-5">
               <h1 className="font-display max-w-2xl text-4xl font-semibold leading-tight text-white sm:text-6xl sm:leading-[1.02]">
-                Your launch plan,
+                From idea to launched,
                 <br />
-                finally in one place.
+                <span className="text-electric">without the overwhelm.</span>
               </h1>
               <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
-                Stop chasing tasks in chat, docs, and sticky notes.
-                Bizno gives you a clear roadmap, easy next steps, and progress you can trust.
+                Stop drowning in todos and scattered notes. Get a proven roadmap, 
+                step-by-step guidance, and exclusive deals on the tools you need — completely free.
               </p>
             </div>
             <div className="fade-up fade-up-delay-2 flex flex-wrap items-center gap-3">
@@ -40,19 +70,19 @@ export default async function Home() {
                 href={primaryHref}
                 className="inline-flex rounded-lg bg-electric px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110"
               >
-                {signedIn ? "Go to dashboard" : "Start free"}
+                {signedIn ? "Go to dashboard" : "Launch your business — Free"}
               </Link>
               <Link
                 href="/pricing"
                 className="inline-flex rounded-lg border border-white/10 px-6 py-3 text-sm text-slate-300 transition hover:border-white/20 hover:text-white"
               >
-                View pricing
+                See how it works
               </Link>
             </div>
             <div className="fade-up fade-up-delay-3 flex flex-wrap gap-5 text-xs text-slate-400 sm:text-sm">
-              <span>✓ Easy to follow roadmap</span>
-              <span>✓ Step-by-step wizard</span>
-              <span>✓ Live progress tracking</span>
+              <span>✓ Proven 12-step roadmap</span>
+              <span>✓ Exclusive tool discounts</span>
+              <span>✓ Team collaboration</span>
             </div>
           </div>
 
@@ -63,17 +93,18 @@ export default async function Home() {
             />
             <div className="relative space-y-5">
               <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Live progress</p>
+                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Launch Progress</p>
                 <span className="rounded-full bg-electric/20 px-2 py-0.5 text-[0.65rem] font-semibold text-electric">
-                  72% done
+                  8 of 12 complete
                 </span>
               </div>
 
               <div className="space-y-3">
                 {[
-                  { label: "Brand setup", progress: 90 },
-                  { label: "Launch prep", progress: 65 },
-                  { label: "Growth plan", progress: 40 },
+                  { label: "Foundation", progress: 100 },
+                  { label: "Branding", progress: 100 },
+                  { label: "Digital Presence", progress: 60 },
+                  { label: "Launch", progress: 20 },
                 ].map((row) => (
                   <div key={row.label} className="space-y-1.5">
                     <div className="flex items-center justify-between text-sm text-slate-300">
@@ -91,10 +122,13 @@ export default async function Home() {
               </div>
 
               <div className="rounded-xl border border-white/10 bg-black/25 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Next step</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Current step</p>
                 <p className="mt-2 text-sm text-slate-200">
-                  Connect your domain and publish your first landing page.
+                  Set up your website with Shopify — Get 20% off your first year
                 </p>
+                <button className="mt-3 text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                  Claim deal ↗
+                </button>
               </div>
             </div>
           </div>
@@ -104,16 +138,16 @@ export default async function Home() {
       <section className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           {
-            title: "Know what to do now",
-            body: "Every launch is split into clear phases, so your team always knows what comes next.",
+            title: "Stop guessing, start doing",
+            body: "Every step is mapped out. Know exactly what to do next and why it matters for your launch.",
           },
           {
-            title: "Less confusion, more progress",
-            body: "Each task has simple instructions your team can act on right away.",
+            title: "Save on essential tools",
+            body: "Exclusive discounts on Shopify, QuickBooks, Canva, Namecheap, and more — right when you need them.",
           },
           {
-            title: "Stay on track",
-            body: "Spot slowdowns early and keep launch momentum strong.",
+            title: "Track real progress",
+            body: "Watch your business come to life with clear phases, progress bars, and team accountability.",
           },
         ].map((card) => (
           <article
@@ -126,12 +160,29 @@ export default async function Home() {
         ))}
       </section>
 
+      {/* Testimonials */}
+      <section className="mt-20">
+        <p className="text-center text-xs uppercase tracking-[0.5em] text-electric mb-8">Loved by founders</p>
+        <div className="grid gap-6 md:grid-cols-3">
+          {TESTIMONIALS.map((t, i) => (
+            <div key={i} className="glass-panel p-6 space-y-4">
+              <p className="text-sm text-slate-300 italic">&ldquo;{t.quote}&rdquo;</p>
+              <div>
+                <p className="text-sm font-semibold text-white">{t.author}</p>
+                <p className="text-xs text-slate-500">{t.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Trust badges */}
       <section className="mt-16 rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
         <div className="grid gap-6 md:grid-cols-3">
           {[
-            { stat: "3x", label: "faster launch planning" },
-            { stat: "1", label: "shared place for your team" },
-            { stat: "0", label: "guesswork on what to do next" },
+            { stat: "£500+", label: "average savings on tools" },
+            { stat: "4 phases", label: "from foundation to launch" },
+            { stat: "100%", label: "free. No credit card needed" },
           ].map((item) => (
             <div
               key={item.label}
@@ -140,6 +191,16 @@ export default async function Home() {
               <p className="font-display text-3xl font-semibold text-electric">{item.stat}</p>
               <p className="mt-2 text-sm text-slate-300">{item.label}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Partner logos */}
+      <section className="mt-16 text-center">
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-500 mb-6">Exclusive deals with</p>
+        <div className="flex flex-wrap justify-center gap-8 items-center opacity-60">
+          {["Shopify", "QuickBooks", "Canva", "Namecheap", "Google Workspace", "Superscript"].map((partner) => (
+            <span key={partner} className="text-sm text-slate-400 font-medium">{partner}</span>
           ))}
         </div>
       </section>

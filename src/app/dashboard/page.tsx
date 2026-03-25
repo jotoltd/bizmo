@@ -1,6 +1,10 @@
 import Link from "next/link";
+import {
+  acceptBusinessInvitationAction,
+  rejectBusinessInvitationAction,
+} from "@/app/dashboard/actions";
 import { requireProfile } from "@/lib/auth";
-import { getBusinesses } from "@/lib/business";
+import { getBusinesses, getPendingBusinessInvitations } from "@/lib/business";
 import { calculateProgress } from "@/lib/checklist";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TopNav } from "@/components/layout/top-nav";
@@ -32,7 +36,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     }
   }
 
-  const businesses = await getBusinesses(activeProfile.id);
+  const [businesses, pendingInvitations] = await Promise.all([
+    getBusinesses(activeProfile.id),
+    getPendingBusinessInvitations(activeProfile.id),
+  ]);
   const businessesWithProgress = businesses.map((business) => ({
     business,
     completion: calculateProgress(activeProfile.plan, business.completed_tasks ?? []),
@@ -88,7 +95,20 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <div className="min-h-screen">
-      <TopNav email={profile.email} plan={activeProfile.plan} role={profile.role} />
+      <TopNav 
+        email={profile.email} 
+        plan={activeProfile.plan} 
+        role={profile.role} 
+        invitations={pendingInvitations}
+        onAcceptInvitation={async (invitationId: string) => {
+          "use server";
+          await acceptBusinessInvitationAction({ invitationId });
+        }}
+        onRejectInvitation={async (invitationId: string) => {
+          "use server";
+          await rejectBusinessInvitationAction({ invitationId });
+        }}
+      />
       <main className="relative mx-auto max-w-6xl px-4 py-10 space-y-10 lg:py-12">
         <div className="grid-mask absolute inset-0 opacity-40" aria-hidden />
 
@@ -100,6 +120,59 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             <Link href="/dashboard" className="text-white underline underline-offset-4 hover:text-electric">
               Exit impersonation
             </Link>
+          </section>
+        )}
+
+        {pendingInvitations.length > 0 && (
+          <section className="space-y-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 py-5">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-amber-300">Invitations</p>
+              <h2 className="mt-2 text-xl font-semibold text-white">Pending team invites</h2>
+              <p className="text-sm text-slate-300">Approve or reject access before joining a business.</p>
+            </div>
+            <div className="space-y-3">
+              {pendingInvitations.map((invitation) => (
+                <div
+                  key={invitation.id}
+                  className="flex flex-col gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      {invitation.business_name ?? "Business invitation"}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      Invited as {invitation.role} · {invitation.invited_email}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <form
+                      action={async () => {
+                        "use server";
+                        await acceptBusinessInvitationAction({
+                          invitationId: invitation.id,
+                        });
+                      }}
+                    >
+                      <button className="rounded-lg bg-electric px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110">
+                        Accept
+                      </button>
+                    </form>
+                    <form
+                      action={async () => {
+                        "use server";
+                        await rejectBusinessInvitationAction({
+                          invitationId: invitation.id,
+                        });
+                      }}
+                    >
+                      <button className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">
+                        Reject
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 

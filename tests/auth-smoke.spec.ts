@@ -20,7 +20,7 @@ const deleteUserByEmail = async (email: string) => {
 };
 
 test.describe("Auth smoke", () => {
-  test("a new founder can sign up and reach the dashboard", async ({ page }: { page: Page }) => {
+  test("a new founder can sign up and receive verification prompt", async ({ page }: { page: Page }) => {
     test.skip(!SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, "Supabase env missing");
 
     const email = `qa+${Date.now()}@bizno.dev`;
@@ -33,11 +33,10 @@ test.describe("Auth smoke", () => {
       await page.getByLabel("Password").fill(password);
       await page.getByRole("button", { name: /create account/i }).click();
 
-      await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
       await expect(
-        page.getByRole("heading", { name: /let's get every business digital-ready/i })
+        page.getByText("Account created. Check your email and verify your account before signing in.")
       ).toBeVisible();
-      await expect(page.getByText("+ Add business")).toBeVisible();
+      await expect(page).toHaveURL(/\/login/);
     } finally {
       await deleteUserByEmail(email);
     }
