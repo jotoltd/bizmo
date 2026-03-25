@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState, useTransition } from "react";
 import { TopNav } from "@/components/layout/top-nav";
@@ -27,6 +27,14 @@ export default function SettingsPage({
   const [loading, setLoading] = useState(true);
   const [saving, startSaving] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+
+  const handleAcceptInvitation = async (invitationId: string) => {
+    await acceptBusinessInvitationAction({ invitationId });
+  };
+
+  const handleRejectInvitation = async (invitationId: string) => {
+    await rejectBusinessInvitationAction({ invitationId });
+  };
 
   useEffect(() => {
     getEmailPreferencesAction().then((result) => {
@@ -89,14 +97,8 @@ export default function SettingsPage({
         plan={plan as any}
         role={role as any}
         invitations={invitations}
-        onAcceptInvitation={async (invitationId: string) => {
-          "use server";
-          await acceptBusinessInvitationAction({ invitationId });
-        }}
-        onRejectInvitation={async (invitationId: string) => {
-          "use server";
-          await rejectBusinessInvitationAction({ invitationId });
-        }}
+        onAcceptInvitation={handleAcceptInvitation}
+        onRejectInvitation={handleRejectInvitation}
       />
       <main className="mx-auto max-w-4xl px-4 py-8 space-y-8">
         <div>
