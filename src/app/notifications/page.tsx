@@ -1,6 +1,7 @@
 import { requireProfile } from "@/lib/auth";
 import { getUserNotifications, markNotificationsAsRead } from "@/lib/business";
 import { TopNav } from "@/components/layout/top-nav";
+import Link from "next/link";
 import {
   acceptBusinessInvitationAction,
   rejectBusinessInvitationAction,
@@ -22,9 +23,41 @@ import {
   UserCheck,
 } from "lucide-react";
 
-export default async function NotificationsPage() {
+type NotificationsPageProps = {
+  searchParams: Promise<{ filter?: string }>;
+};
+
+const FILTERS = ["all", "tasks", "deadlines", "team"] as const;
+
+type NotificationFilter = (typeof FILTERS)[number];
+
+const NOTIFICATION_FILTER_TYPES: Record<Exclude<NotificationFilter, "all">, string[]> = {
+  tasks: ["task_completed", "task_assigned"],
+  deadlines: ["deadline_approaching", "deadline_missed"],
+  team: [
+    "invitation_received",
+    "invitation_accepted",
+    "invitation_rejected",
+    "invitation_expired",
+    "member_removed",
+    "role_changed",
+    "ownership_transferred",
+  ],
+};
+
+export default async function NotificationsPage({ searchParams }: NotificationsPageProps) {
+  const { filter } = await searchParams;
+  const currentFilter = FILTERS.includes((filter as NotificationFilter) ?? "all")
+    ? ((filter as NotificationFilter) ?? "all")
+    : "all";
   const profile = await requireProfile();
   const notifications = await getUserNotifications(profile.id);
+  const filteredNotifications =
+    currentFilter === "all"
+      ? notifications
+      : notifications.filter((notification) =>
+          NOTIFICATION_FILTER_TYPES[currentFilter].includes(notification.type)
+        );
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -97,17 +130,37 @@ export default async function NotificationsPage() {
             </form>
           </div>
 
-          {notifications.length === 0 ? (
+          <div className="glass-panel flex flex-wrap gap-2 p-3">
+            {FILTERS.map((tab) => {
+              const active = tab === currentFilter;
+              const href = tab === "all" ? "/notifications" : `/notifications?filter=${tab}`;
+              return (
+                <Link
+                  key={tab}
+                  href={href}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
+                    active
+                      ? "border border-electric/40 bg-electric/10 text-electric"
+                      : "border border-white/15 bg-white/[0.03] text-slate-300 hover:border-white/30 hover:text-white"
+                  }`}
+                >
+                  {tab}
+                </Link>
+              );
+            })}
+          </div>
+
+          {filteredNotifications.length === 0 ? (
             <div className="glass-panel border border-white/10 p-12 text-center">
               <Bell className="mx-auto mb-4 h-12 w-12 text-slate-600" />
-              <h2 className="text-xl font-semibold text-white">No notifications yet</h2>
+              <h2 className="text-xl font-semibold text-white">No notifications in this filter</h2>
               <p className="mt-2 text-sm text-slate-400">
                 You&apos;ll see updates about invitations, team changes, and announcements here.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {notifications.map((notification) => (
+              {filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={`glass-panel flex items-start gap-4 border p-4 transition ${

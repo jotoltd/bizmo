@@ -1,44 +1,41 @@
 import { redirect } from "next/navigation";
-import type { Session, User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export const getSupabaseSession = async (): Promise<Session | null> => {
+export const getSupabaseUser = async (): Promise<User | null> => {
   const supabase = await createSupabaseServerClient();
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession();
+  } = await supabase.auth.getUser();
 
   if (error) {
-    console.error("Failed to fetch session", error.message);
+    if (error.message.toLowerCase().includes("auth session missing")) {
+      return null;
+    }
+    console.error("Failed to fetch authenticated user", error.message);
     return null;
   }
 
-  return session;
-};
-
-export const requireSession = async (): Promise<Session> => {
-  const session = await getSupabaseSession();
-  if (!session) redirect("/login");
-  return session;
+  return user ?? null;
 };
 
 export const requireUser = async (): Promise<User> => {
-  const session = await requireSession();
-  if (!session.user) redirect("/login");
-  return session.user;
+  const user = await getSupabaseUser();
+  if (!user) redirect("/login");
+  return user;
 };
 
 export const getProfile = async (): Promise<Profile | null> => {
-  const session = await getSupabaseSession();
-  if (!session?.user) return null;
+  const user = await getSupabaseUser();
+  if (!user) return null;
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("id, email, plan, role, user_type, last_active, suspended")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .single();
 
   if (error) {

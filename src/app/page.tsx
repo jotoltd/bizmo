@@ -1,4 +1,4 @@
-import { getSupabaseSession } from "@/lib/auth";
+import { getSupabaseUser } from "@/lib/auth";
 import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
 import { MarketingCta } from "@/components/marketing/marketing-cta";
 import Link from "next/link";
@@ -34,8 +34,8 @@ const TESTIMONIALS = [
 ];
 
 export default async function Home() {
-  const session = await getSupabaseSession();
-  const signedIn = Boolean(session);
+  const user = await getSupabaseUser();
+  const signedIn = Boolean(user);
   const primaryHref = signedIn ? "/dashboard" : "/login";
   const primaryLabel = signedIn ? "Open dashboard" : "Start free — no credit card";
 
