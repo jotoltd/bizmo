@@ -8,6 +8,7 @@ import {
   sendBusinessInvitationEmail,
   sendBusinessInvitationResponseEmail,
 } from "@/lib/email/resend";
+import { dispatchPushToUser } from "@/lib/push/dispatch";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getTasksForPlan } from "@/lib/checklist";
@@ -38,7 +39,15 @@ const createUserNotification = async ({
 
     if (error) {
       console.error("Failed to create user notification", error.message);
+      return;
     }
+
+    await dispatchPushToUser({
+      userId,
+      title,
+      body: body ?? "You have a new update in Bizno.",
+      data,
+    });
   } catch (error) {
     console.error("Unexpected error creating user notification", error);
   }

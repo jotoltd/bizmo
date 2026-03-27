@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { dispatchPushToUser } from "@/lib/push/dispatch";
 
 type RoadmapStepRecord = {
   id: string;
@@ -143,6 +144,17 @@ export const emitDeadlineNotifications = async () => {
             console.error("Failed to create deadline_approaching notification", error.message);
           } else {
             approachingCreated += 1;
+            await dispatchPushToUser({
+              userId: business.user_id,
+              title: "Upcoming task deadline",
+              body: `\"${step.title}\" is due soon.`,
+              data: {
+                business_id: business.id,
+                task_id: step.id,
+                due_at: dueAt.toISOString(),
+                type: "deadline_approaching",
+              },
+            });
           }
         }
       }
@@ -172,6 +184,17 @@ export const emitDeadlineNotifications = async () => {
             console.error("Failed to create deadline_missed notification", error.message);
           } else {
             missedCreated += 1;
+            await dispatchPushToUser({
+              userId: business.user_id,
+              title: "Task deadline missed",
+              body: `\"${step.title}\" is overdue.`,
+              data: {
+                business_id: business.id,
+                task_id: step.id,
+                due_at: dueAt.toISOString(),
+                type: "deadline_missed",
+              },
+            });
           }
         }
       }
