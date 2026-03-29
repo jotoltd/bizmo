@@ -11,6 +11,11 @@
     "test:e2e:headed": "playwright test --headed --project=chromium",
     "postinstall": "node scripts/install-playwright.cjs"
   },
+  "overrides": {
+    "@sentry/nextjs": {
+      "next": "$next"
+    }
+  },
   "dependencies": {
     "@sentry/nextjs": "^8.34.0",
     "@supabase/auth-ui-react": "^0.4.7",
