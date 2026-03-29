@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { dispatchPushToUser } from "@/lib/push/dispatch";
 
 // ── helpers ──────────────────────────────────────────────
 
@@ -541,6 +542,19 @@ export async function sendNotification(formData: FormData) {
   }));
 
   await supabase.from("notifications").insert(notifications);
+  
+  // Dispatch push notifications to mobile devices (non-blocking)
+  for (const user of users) {
+    dispatchPushToUser({
+      userId: user.id,
+      title,
+      body,
+      data: { type: "admin_broadcast", audience },
+    }).catch((err) => {
+      console.error(`Failed to dispatch push to user ${user.id}:`, err);
+    });
+  }
+  
   revalidatePath("/admin/comms");
 }
 
