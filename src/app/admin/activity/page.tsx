@@ -1,6 +1,14 @@
 import { getRecentActivity } from "@/lib/admin/extended-actions";
 import Link from "next/link";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Activity Log | Admin | Bizno",
+  description: "View all platform activity including user signups, business creations, and support tickets.",
+  robots: "noindex",
+};
+
 export default async function ActivityPage() {
   const activity = await getRecentActivity(50);
 

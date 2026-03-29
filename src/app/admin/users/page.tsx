@@ -1,5 +1,11 @@
 import { getUsers } from "@/lib/admin/actions";
 import { UsersManager } from "./users-manager";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Users | Admin | Bizno",
+  description: "Manage Bizno users, view profiles, and handle user-related tasks.",
+};
 
 export default async function AdminUsersPage() {
   const users = await getUsers();

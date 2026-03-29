@@ -1,6 +1,12 @@
 import { getAdminStats } from "@/lib/admin/actions";
 import { getRecentActivity, getSystemStatus } from "@/lib/admin/extended-actions";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard | Admin | Bizno",
+  description: "Admin dashboard overview with system stats, recent activity, and system health.",
+};
 
 export default async function AdminDashboardPage() {
   const stats = await getAdminStats();

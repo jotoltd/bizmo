@@ -1,6 +1,12 @@
 import { getPhases, getSteps, getTags } from "@/lib/admin/actions";
 import Link from "next/link";
 import { RoadmapManager } from "./roadmap-manager";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Roadmap | Admin | Bizno",
+  description: "Manage product roadmap phases and steps.",
+};
 
 export default async function AdminRoadmapPage() {
   const [phases, steps, tags] = await Promise.all([

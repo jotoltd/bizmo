@@ -1,5 +1,11 @@
 import { getAllBusinesses } from "@/lib/admin/actions";
 import { BusinessesManager } from "./businesses-manager";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Businesses | Admin | Bizno",
+  description: "Manage businesses on the Bizno platform.",
+};
 
 export default async function AdminBusinessesPage() {
   const businesses = await getAllBusinesses();

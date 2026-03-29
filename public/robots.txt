@@ -1,0 +1,23 @@
+User-agent: *
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /api
+Disallow: /api/*
+
+# Allow main pages
+Allow: /
+Allow: /login
+Allow: /register
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /pricing
+Allow: /dashboard
+Allow: /business
+Allow: /settings
+Allow: /notifications
+Allow: /support
+Allow: /business/*
+
+Sitemap: https://www.bizno.co.uk/sitemap.xml

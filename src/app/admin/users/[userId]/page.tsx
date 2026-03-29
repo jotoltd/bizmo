@@ -9,6 +9,12 @@ import {
   getImpersonationPath,
 } from "@/lib/admin/actions";
 import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "User Details | Admin | Bizno",
+  description: "View detailed user information and activity.",
+};
 
 type UserDetailPageProps = {
   params: Promise<{ userId: string }>;

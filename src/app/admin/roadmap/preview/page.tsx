@@ -1,4 +1,10 @@
 import { getRoadmapPreview } from "@/lib/admin/actions";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Roadmap Preview | Admin | Bizno",
+  description: "Preview the product roadmap as users see it.",
+};
 
 const USER_TYPES = ["freelancer", "agency", "enterprise"] as const;
 

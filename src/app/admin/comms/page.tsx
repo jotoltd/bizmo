@@ -1,5 +1,11 @@
 import { getAnnouncements } from "@/lib/admin/actions";
 import { CommsManager } from "./comms-manager";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Communications | Admin | Bizno",
+  description: "Send announcements and manage platform communications.",
+};
 
 export default async function AdminCommsPage() {
   const announcements = await getAnnouncements();

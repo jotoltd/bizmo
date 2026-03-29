@@ -1,7 +1,13 @@
 import { getSupportTickets } from "@/lib/admin/extended-actions";
 import { SupportTicketsManager } from "./support-manager";
+import type { Metadata } from "next";
 
-export default async function SupportTicketsPage() {
+export const metadata: Metadata = {
+  title: "Support | Admin | Bizno",
+  description: "Manage support tickets and user inquiries.",
+};
+
+export default async function AdminSupportPage() {
   const tickets = await getSupportTickets();
 
   return (
