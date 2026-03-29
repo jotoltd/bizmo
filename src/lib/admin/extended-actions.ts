@@ -520,3 +520,176 @@ export async function deleteCampaign(id: string) {
 
   revalidatePath("/admin/campaigns");
 }
+
+// Recent Activity Feed
+export type ActivityItem = {
+  id: string;
+  type: "user_signup" | "business_created" | "support_ticket" | "invitation_sent" | "login";
+  title: string;
+  description: string;
+  userEmail?: string;
+  createdAt: string;
+  link?: string;
+};
+
+export async function getRecentActivity(limit = 10): Promise<ActivityItem[]> {
+  const supabase = await createSupabaseServerClient();
+  await requireAdmin();
+
+  // Get recent users
+  const { data: recentUsers } = await supabase
+    .from("profiles")
+    .select("id, email, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  // Get recent businesses
+  const { data: recentBusinesses } = await supabase
+    .from("businesses")
+    .select("id, name, created_at, owner_id")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  // Get recent support tickets
+  const { data: recentTickets } = await supabase
+    .from("support_tickets")
+    .select("id, subject, status, created_at, user_id")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  const activity: ActivityItem[] = [];
+
+  recentUsers?.forEach((user) => {
+    activity.push({
+      id: `user-${user.id}`,
+      type: "user_signup",
+      title: "New User Signup",
+      description: user.email,
+      userEmail: user.email,
+      createdAt: user.created_at,
+      link: `/admin/users`,
+    });
+  });
+
+  recentBusinesses?.forEach((biz) => {
+    activity.push({
+      id: `biz-${biz.id}`,
+      type: "business_created",
+      title: "Business Created",
+      description: biz.name,
+      createdAt: biz.created_at,
+      link: `/admin/businesses`,
+    });
+  });
+
+  recentTickets?.forEach((ticket) => {
+    activity.push({
+      id: `ticket-${ticket.id}`,
+      type: "support_ticket",
+      title: "Support Ticket",
+      description: `${ticket.subject} (${ticket.status})`,
+      createdAt: ticket.created_at,
+      link: `/admin/support`,
+    });
+  });
+
+  // Sort by date and limit
+  return activity
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, limit);
+}
+
+// System Status
+export type SystemStatus = {
+  database: "healthy" | "degraded" | "down";
+  storage: "healthy" | "degraded" | "down";
+  auth: "healthy" | "degraded" | "down";
+  lastChecked: string;
+  issues: string[];
+};
+
+export async function getSystemStatus(): Promise<SystemStatus> {
+  const supabase = await createSupabaseServerClient();
+  await requireAdmin();
+
+  const issues: string[] = [];
+  let database: "healthy" | "degraded" | "down" = "healthy";
+  let storage: "healthy" | "degraded" | "down" = "healthy";
+  let auth: "healthy" | "degraded" | "down" = "healthy";
+
+  // Check database
+  const { error: dbError } = await supabase.from("profiles").select("count").single();
+  if (dbError) {
+    database = "down";
+    issues.push("Database connection failed");
+  }
+
+  // Check storage
+  const { error: storageError } = await supabase.storage.listBuckets();
+  if (storageError) {
+    storage = "degraded";
+    issues.push("Storage API slow or unavailable");
+  }
+
+  return {
+    database,
+    storage,
+    auth,
+    lastChecked: new Date().toISOString(),
+    issues,
+  };
+}
+
+// Admin Search
+export type SearchResult = {
+  id: string;
+  type: "user" | "business";
+  title: string;
+  subtitle: string;
+  link: string;
+};
+
+export async function adminSearch(query: string): Promise<SearchResult[]> {
+  const supabase = await createSupabaseServerClient();
+  await requireAdmin();
+
+  if (!query || query.length < 2) return [];
+
+  const results: SearchResult[] = [];
+
+  // Search users
+  const { data: users } = await supabase
+    .from("profiles")
+    .select("id, email, full_name")
+    .or(`email.ilike.%${query}%,full_name.ilike.%${query}%`)
+    .limit(5);
+
+  users?.forEach((user) => {
+    results.push({
+      id: user.id,
+      type: "user",
+      title: user.full_name || user.email,
+      subtitle: user.email,
+      link: `/admin/users`,
+    });
+  });
+
+  // Search businesses
+  const { data: businesses } = await supabase
+    .from("businesses")
+    .select("id, name, company_number")
+    .or(`name.ilike.%${query}%,company_number.ilike.%${query}%`)
+    .limit(5);
+
+  businesses?.forEach((biz) => {
+    results.push({
+      id: biz.id,
+      type: "business",
+      title: biz.name,
+      subtitle: biz.company_number || "No company number",
+      link: `/admin/businesses`,
+    });
+  });
+
+  return results;
+}
