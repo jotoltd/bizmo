@@ -44,7 +44,7 @@ function PhaseForm({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-slate-400">Sort Order</label>
+          <label className="text-xs text-slate-400">Position (order number)</label>
           <input
             name="sort_order"
             type="number"
@@ -65,7 +65,7 @@ function PhaseForm({
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
-          {phase ? "Update Phase" : "Create Phase"}
+          {phase ? "Save Section" : "Create Section"}
         </Button>
         <Button type="button" variant="ghost" onClick={onClose}>
           Cancel
@@ -101,14 +101,14 @@ function StepForm({
       {step && <input type="hidden" name="id" value={step.id} />}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1">
-          <label className="text-xs text-slate-400">Phase</label>
+          <label className="text-xs text-slate-400">Group</label>
           <select
             name="phase_id"
             defaultValue={step?.phase_id}
             required
             className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-electric focus:outline-none"
           >
-            <option value="">Select phase</option>
+            <option value="">Select a group</option>
             {phases.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.title}
@@ -127,7 +127,7 @@ function StepForm({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-slate-400">Sort Order</label>
+          <label className="text-xs text-slate-400">Position</label>
           <input
             name="sort_order"
             type="number"
@@ -148,7 +148,7 @@ function StepForm({
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs text-slate-400">Why (context)</label>
+        <label className="text-xs text-slate-400">Why this matters (helps people understand)</label>
         <textarea
           name="why"
           defaultValue={step?.why ?? ""}
@@ -158,7 +158,7 @@ function StepForm({
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs text-slate-400">How (one per line)</label>
+        <label className="text-xs text-slate-400">How to do this (steps, one per line)</label>
         <textarea
           name="how"
           defaultValue={step?.how?.join("\n") ?? ""}
@@ -170,19 +170,19 @@ function StepForm({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1">
-          <label className="text-xs text-slate-400">Status</label>
+          <label className="text-xs text-slate-400">Who can see this</label>
           <select
             name="status"
             defaultValue={step?.status ?? "draft"}
             className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-electric focus:outline-none"
           >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="scheduled">Scheduled</option>
+            <option value="draft">Hidden (draft)</option>
+            <option value="published">Live (everyone can see)</option>
+            <option value="scheduled">Scheduled (goes live later)</option>
           </select>
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-slate-400">Publish At</label>
+          <label className="text-xs text-slate-400">Go live at (optional)</label>
           <input
             name="publish_at"
             type="datetime-local"
@@ -198,14 +198,14 @@ function StepForm({
               defaultChecked={step?.mandatory}
               className="accent-electric"
             />
-            Mandatory
+            Must complete this
           </label>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
-          <label className="text-xs text-slate-400">Affiliate Link URL</label>
+          <label className="text-xs text-slate-400">Special offer link (optional)</label>
           <input
             name="affiliate_link"
             defaultValue={step?.affiliate_link ?? ""}
@@ -214,7 +214,7 @@ function StepForm({
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs text-slate-400">Affiliate Link Text</label>
+          <label className="text-xs text-slate-400">Offer button text</label>
           <input
             name="affiliate_name"
             defaultValue={step?.affiliate_name ?? ""}
@@ -226,7 +226,7 @@ function StepForm({
 
       <div className="flex gap-2">
         <Button type="submit" disabled={pending}>
-          {step ? "Update Step" : "Create Step"}
+          {step ? "Save Changes" : "Add Step"}
         </Button>
         <Button type="button" variant="ghost" onClick={onClose}>
           Cancel
@@ -276,7 +276,7 @@ export function RoadmapManager({
       {/* Phases */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Phases</h2>
+          <h2 className="text-xl font-semibold">Sections</h2>
           <Button
             onClick={() => {
               setEditingPhase(undefined);
@@ -284,7 +284,7 @@ export function RoadmapManager({
             }}
             size="sm"
           >
-            + Add Phase
+            + Add Section
           </Button>
         </div>
 
@@ -315,7 +315,7 @@ export function RoadmapManager({
                       </p>
                     )}
                     <p className="text-xs text-slate-500 mt-1">
-                      Order: {phase.sort_order} · {phaseSteps.length} steps
+                      Position: {phase.sort_order} · {phaseSteps.length} tasks
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -367,7 +367,7 @@ export function RoadmapManager({
                                     : "bg-white/10 text-slate-400"
                                 }`}
                               >
-                                {step.status}
+                                {step.status === "published" ? "Live" : step.status === "draft" ? "Hidden" : "Scheduled"}
                               </span>
                               {step.mandatory && (
                                 <span className="text-[0.6rem] text-electric font-semibold uppercase">
@@ -376,7 +376,7 @@ export function RoadmapManager({
                               )}
                               {step.affiliate_link && (
                                 <span className="text-[0.6rem] text-amber-400 font-semibold uppercase">
-                                  Affiliate
+                                  Special Offer
                                 </span>
                               )}
                             </div>

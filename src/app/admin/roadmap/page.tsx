@@ -19,7 +19,7 @@ export default async function AdminRoadmapPage() {
         <p className="text-xs uppercase tracking-[0.5em] text-electric">Admin</p>
         <h1 className="text-3xl font-semibold">Roadmap & Content</h1>
         <p className="text-sm text-slate-400">
-          Create, edit, reorder, and publish roadmap phases and steps with affiliate links.
+          Build your roadmap: add sections, create tasks, and manage special offers.
         </p>
       </div>
 
@@ -27,19 +27,19 @@ export default async function AdminRoadmapPage() {
       <div className="grid gap-4 sm:grid-cols-4">
         <div className="glass-panel p-4 text-center">
           <p className="text-2xl font-semibold text-white">{phases.length}</p>
-          <p className="text-xs text-slate-500 uppercase tracking-wider">Phases</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wider">Sections</p>
         </div>
         <div className="glass-panel p-4 text-center">
           <p className="text-2xl font-semibold text-green-400">{publishedCount}</p>
-          <p className="text-xs text-slate-500 uppercase tracking-wider">Published</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wider">Live</p>
         </div>
         <div className="glass-panel p-4 text-center">
           <p className="text-2xl font-semibold text-amber-400">{draftCount}</p>
-          <p className="text-xs text-slate-500 uppercase tracking-wider">Drafts</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wider">Hidden</p>
         </div>
         <div className="glass-panel p-4 text-center">
           <p className="text-2xl font-semibold text-electric">{affiliateCount}</p>
-          <p className="text-xs text-slate-500 uppercase tracking-wider">Affiliate Links</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wider">Special Offers</p>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export default async function AdminRoadmapPage() {
         </Link>
         <span className="text-slate-600">|</span>
         <span className="text-xs text-slate-500 self-center">
-          Sample data loaded! Edit any step to customize affiliate links.
+          Edit any task to add special offer links.
         </span>
       </div>
 
