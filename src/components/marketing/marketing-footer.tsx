@@ -38,6 +38,12 @@ export const MarketingFooter = () => {
             <Link href="/login" className="transition hover:text-white">
               Login
             </Link>
+            <Link href="/privacy" className="transition hover:text-white">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="transition hover:text-white">
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>
