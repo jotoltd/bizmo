@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo, useCallback, memo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   upsertPhase,
@@ -24,7 +24,58 @@ const emptyStep: Partial<RoadmapStep> = {
   sort_order: 0,
 };
 
-// ── Phase Form ───────────────────────────────────────────
+// ── Task Card (Memoized for speed) ───────────────────────
+
+const TaskCard = memo(function TaskCard({
+  step,
+  onEdit,
+  onDelete,
+}: {
+  step: RoadmapStep;
+  onEdit: (step: RoadmapStep) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div
+      className="flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-4 py-3 hover:bg-white/[0.04] transition-colors"
+    >
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-slate-500">#{step.sort_order}</span>
+        <div>
+          <p className="text-sm font-medium text-white">{step.title}</p>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <span
+              className={`inline-block rounded-full px-2 py-0.5 text-[0.6rem] font-semibold uppercase ${
+                step.status === "published"
+                  ? "bg-green-500/20 text-green-400"
+                  : step.status === "scheduled"
+                  ? "bg-amber-500/20 text-amber-400"
+                  : "bg-white/10 text-slate-400"
+              }`}
+            >
+              {step.status === "published" ? "Live" : step.status === "draft" ? "Hidden" : "Scheduled"}
+            </span>
+            {step.mandatory && (
+              <span className="text-[0.6rem] text-electric font-semibold uppercase">Required</span>
+            )}
+            {step.affiliate_link && (
+              <span className="text-[0.6rem] text-amber-400 font-semibold uppercase">Special Offer</span>
+            )}
+          </div>
+          {step.affiliate_link && (
+            <p className="text-[0.6rem] text-slate-500 mt-0.5">
+              {step.affiliate_name || step.affiliate_link.slice(0, 40)}...
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button variant="ghost" size="sm" onClick={() => onEdit(step)}>Edit</Button>
+        <Button variant="ghost" size="sm" onClick={() => onDelete(step.id)} className="text-red-400 hover:text-red-300">Delete</Button>
+      </div>
+    </div>
+  );
+});
 
 function PhaseForm({
   phase,
@@ -35,16 +86,15 @@ function PhaseForm({
 }) {
   const [pending, startTransition] = useTransition();
 
+  const handleSubmit = useCallback((fd: FormData) => {
+    startTransition(async () => {
+      await upsertPhase(fd);
+      onClose();
+    });
+  }, [onClose]);
+
   return (
-    <form
-      className="glass-panel space-y-4 p-5"
-      action={(fd) => {
-        startTransition(async () => {
-          await upsertPhase(fd);
-          onClose();
-        });
-      }}
-    >
+    <form className="glass-panel space-y-4 p-5" action={handleSubmit}>
       {phase && <input type="hidden" name="id" value={phase.id} />}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
@@ -89,38 +139,41 @@ function PhaseForm({
   );
 }
 
-// ── Step Form ────────────────────────────────────────────
+// ── Step Form (Optimized) ────────────────────────────────────────────
 
 function StepForm({
   step,
+  phaseId,
   phases,
   onClose,
 }: {
   step?: RoadmapStep;
+  phaseId?: string;
   phases: RoadmapPhase[];
   onClose: () => void;
 }) {
   const [pending, startTransition] = useTransition();
 
+  const handleSubmit = useCallback((fd: FormData) => {
+    startTransition(async () => {
+      await upsertStep(fd);
+      onClose();
+    });
+  }, [onClose]);
+
   return (
-    <form
-      className="glass-panel space-y-4 p-5"
-      action={(fd) => {
-        startTransition(async () => {
-          await upsertStep(fd);
-          onClose();
-        });
-      }}
-    >
+    <form className="glass-panel space-y-4 p-5" action={handleSubmit}>
       {step && <input type="hidden" name="id" value={step.id} />}
+      <input type="hidden" name="phase_id" value={step?.phase_id || phaseId || ""} />
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1">
           <label className="text-xs text-slate-400">Group</label>
           <select
             name="phase_id"
-            defaultValue={step?.phase_id}
+            defaultValue={step?.phase_id || phaseId}
+            disabled={!!phaseId}
             required
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-electric focus:outline-none"
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-electric focus:outline-none disabled:opacity-50"
           >
             <option value="">Select a group</option>
             {phases.map((p) => (
@@ -250,7 +303,7 @@ function StepForm({
   );
 }
 
-// ── Main Manager ─────────────────────────────────────────
+// ── Main Manager (Optimized) ─────────────────────────────────────────
 
 export function RoadmapManager({
   initialPhases,
@@ -265,10 +318,67 @@ export function RoadmapManager({
   const [editingPhase, setEditingPhase] = useState<RoadmapPhase | undefined>();
   const [showStepForm, setShowStepForm] = useState(false);
   const [editingStep, setEditingStep] = useState<RoadmapStep | undefined>();
+  const [activePhaseId, setActivePhaseId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  // Memoize steps by phase for O(1) lookup
+  const stepsByPhase = useMemo(() => {
+    const map = new Map<string, RoadmapStep[]>();
+    for (const step of initialSteps) {
+      const list = map.get(step.phase_id) || [];
+      list.push(step);
+      map.set(step.phase_id, list);
+    }
+    // Sort each phase's steps
+    for (const [phaseId, steps] of map) {
+      map.set(phaseId, steps.sort((a, b) => a.sort_order - b.sort_order));
+    }
+    return map;
+  }, [initialSteps]);
 
   const phases = initialPhases;
   const steps = initialSteps;
+
+  // Memoized callbacks - stable references prevent re-renders
+  const handleEditPhase = useCallback((phase: RoadmapPhase) => {
+    setEditingPhase(phase);
+    setShowPhaseForm(true);
+  }, []);
+
+  const handleDeletePhase = useCallback((id: string) => {
+    if (confirm("Delete this section and all its tasks?")) {
+      startTransition(() => deletePhase(id));
+    }
+  }, [startTransition]);
+
+  const handleEditStep = useCallback((step: RoadmapStep) => {
+    setEditingStep(step);
+    setActivePhaseId(step.phase_id);
+    setShowStepForm(true);
+  }, []);
+
+  const handleDeleteStep = useCallback((id: string) => {
+    if (confirm("Delete this task?")) {
+      startTransition(() => deleteStep(id));
+    }
+  }, [startTransition]);
+
+  const handleClosePhaseForm = useCallback(() => {
+    setShowPhaseForm(false);
+    setEditingPhase(undefined);
+  }, []);
+
+  const handleCloseStepForm = useCallback(() => {
+    setShowStepForm(false);
+    setEditingStep(undefined);
+    setActivePhaseId(null);
+  }, []);
+
+  const handleAddTask = useCallback((phaseId: string) => {
+    setEditingStep({ ...emptyStep, phase_id: phaseId } as RoadmapStep);
+    setActivePhaseId(phaseId);
+    setShowStepForm(true);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -313,52 +423,29 @@ export function RoadmapManager({
           <PhaseForm
             key={editingPhase?.id ?? "new-phase"}
             phase={editingPhase}
-            onClose={() => {
-              setShowPhaseForm(false);
-              setEditingPhase(undefined);
-            }}
+            onClose={handleClosePhaseForm}
           />
         )}
 
         <div className="space-y-3">
           {phases.map((phase) => {
-            const phaseSteps = steps.filter((s) => s.phase_id === phase.id);
+            const phaseSteps = stepsByPhase.get(phase.id) || [];
+            const isStepFormActive = showStepForm && activePhaseId === phase.id;
             return (
               <div key={phase.id} className="glass-panel p-5 space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {phase.title}
-                    </h3>
+                    <h3 className="text-lg font-semibold text-white">{phase.title}</h3>
                     {phase.description && (
-                      <p className="text-sm text-slate-400">
-                        {phase.description}
-                      </p>
+                      <p className="text-sm text-slate-400">{phase.description}</p>
                     )}
                     <p className="text-xs text-slate-500 mt-1">
                       Position: {phase.sort_order} · {phaseSteps.length} tasks
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setEditingPhase(phase);
-                        setShowPhaseForm(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        startTransition(() => deletePhase(phase.id));
-                      }}
-                    >
-                      Delete
-                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEditPhase(phase)}>Edit</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeletePhase(phase.id)} className="text-red-400 hover:text-red-300">Delete</Button>
                   </div>
                 </div>
 
@@ -366,86 +453,38 @@ export function RoadmapManager({
                 {phaseSteps.length > 0 && (
                   <div className="space-y-2 border-t border-white/5 pt-4">
                     {phaseSteps.map((step) => (
-                      <div
+                      <TaskCard
                         key={step.id}
-                        className="flex items-center justify-between rounded-lg border border-white/5 bg-white/[0.02] px-4 py-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-slate-500">
-                            #{step.sort_order}
-                          </span>
-                          <div>
-                            <p className="text-sm font-medium text-white">
-                              {step.title}
-                            </p>
-                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                              <span
-                                className={`inline-block rounded-full px-2 py-0.5 text-[0.6rem] font-semibold uppercase ${
-                                  step.status === "published"
-                                    ? "bg-green-500/20 text-green-400"
-                                    : step.status === "scheduled"
-                                    ? "bg-amber-500/20 text-amber-400"
-                                    : "bg-white/10 text-slate-400"
-                                }`}
-                              >
-                                {step.status === "published" ? "Live" : step.status === "draft" ? "Hidden" : "Scheduled"}
-                              </span>
-                              {step.mandatory && (
-                                <span className="text-[0.6rem] text-electric font-semibold uppercase">
-                                  Required
-                                </span>
-                              )}
-                              {step.affiliate_link && (
-                                <span className="text-[0.6rem] text-amber-400 font-semibold uppercase">
-                                  Special Offer
-                                </span>
-                              )}
-                            </div>
-                            {step.affiliate_link && (
-                              <p className="text-[0.6rem] text-slate-500 mt-0.5">
-                                {step.affiliate_name || step.affiliate_link.slice(0, 40)}...
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingStep(step);
-                              setShowStepForm(true);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              startTransition(() => deleteStep(step.id));
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
+                        step={step}
+                        onEdit={handleEditStep}
+                        onDelete={handleDeleteStep}
+                      />
                     ))}
                   </div>
                 )}
                 
-                {/* Add Task Button - always shown */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setEditingStep({ ...emptyStep, phase_id: phase.id } as RoadmapStep);
-                    setShowStepForm(true);
-                  }}
-                  className="w-full mt-2 border border-dashed border-white/20 hover:border-electric/50 text-slate-400 hover:text-electric"
-                >
-                  + Add task to this section
-                </Button>
+                {/* Inline Step Form */}
+                {isStepFormActive && editingStep && (
+                  <StepForm
+                    key={editingStep.id ?? "new"}
+                    step={editingStep.id ? editingStep : undefined}
+                    phaseId={phase.id}
+                    phases={phases}
+                    onClose={handleCloseStepForm}
+                  />
+                )}
+
+                {/* Add Task Button */}
+                {!isStepFormActive && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleAddTask(phase.id)}
+                    className="w-full mt-2 border border-dashed border-white/20 hover:border-electric/50 text-slate-400 hover:text-electric"
+                  >
+                    + Add task to this section
+                  </Button>
+                )}
               </div>
             );
           })}
