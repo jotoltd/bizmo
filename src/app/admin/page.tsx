@@ -119,12 +119,6 @@ export default async function AdminDashboardPage() {
           >
             Send Announcement →
           </Link>
-          <Link
-            href="/admin/settings"
-            className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-electric hover:text-electric"
-          >
-            Feature Flags →
-          </Link>
         </div>
       </div>
     </div>
