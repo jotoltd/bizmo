@@ -10,18 +10,16 @@ import {
   getEmailPreferencesAction,
   updateEmailPreferencesAction,
 } from "@/app/dashboard/actions-email";
-import type { UserEmailPreferences, BusinessInvitation } from "@/types";
+import type { UserEmailPreferences, BusinessInvitation, UserRole } from "@/types";
 
 export default function SettingsPage({
   invitations,
   email,
-  plan,
   role,
 }: {
   invitations: BusinessInvitation[];
   email: string;
-  plan: string;
-  role?: string;
+  role?: UserRole;
 }) {
   const [preferences, setPreferences] = useState<UserEmailPreferences | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,7 +80,7 @@ export default function SettingsPage({
   if (loading) {
     return (
       <div className="min-h-screen">
-        <TopNav email={email} plan={plan as any} role={role as any} invitations={invitations} />
+        <TopNav email={email} role={role} invitations={invitations} />
         <main className="mx-auto max-w-4xl px-4 py-8">
           <p className="text-slate-400">Loading...</p>
         </main>
@@ -94,8 +92,7 @@ export default function SettingsPage({
     <div className="min-h-screen">
       <TopNav
         email={email}
-        plan={plan as any}
-        role={role as any}
+        role={role}
         invitations={invitations}
         onAcceptInvitation={handleAcceptInvitation}
         onRejectInvitation={handleRejectInvitation}

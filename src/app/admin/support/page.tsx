@@ -13,10 +13,7 @@ export default async function SupportTicketsPage() {
           Manage user support requests and assign to staff.
         </p>
       </div>
-      <SupportTicketsManager 
-        initialTickets={tickets} 
-        adminUsers={[]} // Will be populated from admin profiles
-      />
+      <SupportTicketsManager initialTickets={tickets} />
     </div>
   );
 }

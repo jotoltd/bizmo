@@ -10,6 +10,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TopNav } from "@/components/layout/top-nav";
 import { AddBusinessDialog } from "@/components/dashboard/add-business-dialog";
 import { BusinessCard } from "@/components/business/business-card";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 type DashboardPageProps = {
   searchParams: Promise<{ impersonate?: string }>;
@@ -45,8 +49,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     completion: calculateProgress(activeProfile.plan, business.completed_tasks ?? []),
   }));
 
-  const freePlanLimitReached =
-    activeProfile.plan === "free" && businessesWithProgress.length >= 1;
   const hasBusinesses = businessesWithProgress.length > 0;
 
   const averageCompletion = hasBusinesses
@@ -73,10 +75,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     {
       label: "Active businesses",
       value: businessesWithProgress.length,
-      helper:
-        activeProfile.plan === "free"
-          ? "Free plan limited to one journey"
-          : "Unlimited journeys on Pro",
+      helper: "Create as many business journeys as you need",
     },
     {
       label: "Avg. readiness",
@@ -97,7 +96,6 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     <div className="min-h-screen">
       <TopNav 
         email={profile.email} 
-        plan={activeProfile.plan} 
         role={profile.role} 
         invitations={pendingInvitations}
         onAcceptInvitation={async (invitationId: string) => {
@@ -113,34 +111,35 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <div className="grid-mask absolute inset-0 opacity-40" aria-hidden />
 
         {isImpersonating && (
-          <section className="relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-electric/30 bg-electric/10 px-5 py-3 text-sm">
-            <p className="text-electric">
-              Impersonating <span className="font-semibold text-white">{activeProfile.email}</span>
+          <Card variant="outline" className="relative flex flex-wrap items-center justify-between gap-3 border-[var(--warning)]/30 bg-[var(--warning)]/10 px-5 py-3 text-sm animate-fade-in">
+            <p className="text-[var(--warning-light)]">
+              Impersonating <span className="font-semibold text-[var(--text-primary)]">{activeProfile.email}</span>
             </p>
-            <Link href="/dashboard" className="text-white underline underline-offset-4 hover:text-electric">
+            <Link href="/dashboard" className="text-[var(--text-primary)] underline underline-offset-4 hover:text-[var(--warning-light)]">
               Exit impersonation
             </Link>
-          </section>
+          </Card>
         )}
 
         {pendingInvitations.length > 0 && (
-          <section className="space-y-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 py-5">
+          <Card variant="elevated" className="space-y-4 border-[var(--warning)]/20 bg-[var(--warning)]/5 px-5 py-5 animate-fade-in">
             <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-amber-300">Invitations</p>
-              <h2 className="mt-2 text-xl font-semibold text-white">Pending team invites</h2>
-              <p className="text-sm text-slate-300">Approve or reject access before joining a business.</p>
+              <Badge variant="warning" className="mb-2">Invitations</Badge>
+              <h2 className="mt-2 text-xl font-semibold text-[var(--text-primary)]">Pending team invites</h2>
+              <p className="text-sm text-[var(--text-secondary)]">Approve or reject access before joining a business.</p>
             </div>
             <div className="space-y-3">
               {pendingInvitations.map((invitation) => (
-                <div
+                <Card
                   key={invitation.id}
-                  className="flex flex-col gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  variant="solid"
+                  className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">
                       {invitation.business_name ?? "Business invitation"}
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[var(--text-tertiary)]">
                       Invited as {invitation.role} · {invitation.invited_email}
                     </p>
                   </div>
@@ -153,9 +152,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         });
                       }}
                     >
-                      <button className="rounded-lg bg-electric px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110">
+                      <Button type="submit" size="sm">
                         Accept
-                      </button>
+                      </Button>
                     </form>
                     <form
                       action={async () => {
@@ -165,101 +164,105 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         });
                       }}
                     >
-                      <button className="rounded-lg border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">
+                      <Button type="submit" variant="secondary" size="sm">
                         Reject
-                      </button>
+                      </Button>
                     </form>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
-          </section>
+          </Card>
         )}
 
-        <section className="relative flex flex-col gap-8 rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-8 shadow-[0_20px_60px_rgba(3,7,18,0.65)] lg:flex-row lg:items-center lg:gap-10 lg:px-10">
-          <div className="space-y-5">
-            <p className="text-xs uppercase tracking-[0.5em] text-electric">
-              Your readiness HQ
-            </p>
+        <Card variant="gradient" hover="lift" padding="lg" className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-10 animate-fade-up">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[var(--electric)]/10 blur-3xl" aria-hidden />
+          <div className="space-y-5 relative z-10 flex-1">
+            <Badge variant="default" className="uppercase tracking-widest">Your readiness HQ</Badge>
             <div className="space-y-3">
-              <h1 className="text-3xl font-semibold sm:text-4xl">
+              <h1 className="text-3xl font-semibold sm:text-4xl text-[var(--text-primary)]">
                 Let&apos;s get every business digital-ready
               </h1>
-              <p className="text-base text-slate-400">
+              <p className="text-base text-[var(--text-secondary)]">
                 Centralize launch plans, measure real momentum, and keep each journey on track with guided tasks.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
               {stats.map((stat) => (
-                <div
+                <Card
                   key={stat.label}
-                  className="min-w-[160px] flex-1 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-4"
+                  variant="solid"
+                  hover="scale"
+                  padding="sm"
+                  className="min-w-[160px] flex-1"
                 >
-                  <p className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-500">
+                  <p className="text-[0.65rem] uppercase tracking-[0.35em] text-[var(--text-tertiary)]">
                     {stat.label}
                   </p>
-                  <p className="text-2xl font-semibold text-white">
+                  <p className="text-2xl font-semibold text-[var(--text-primary)]">
                     {typeof stat.value === "number"
                       ? stat.value.toLocaleString()
                       : stat.value}
                   </p>
-                  <p className="text-xs text-slate-400">{stat.helper}</p>
-                </div>
+                  <p className="text-xs text-[var(--text-secondary)]">{stat.helper}</p>
+                </Card>
               ))}
             </div>
             {hasBusinesses && (
-              <div className="flex flex-wrap items-center gap-3 text-sm text-slate-400">
-                <AddBusinessDialog disabled={freePlanLimitReached} />
-                <span>
-                  {freePlanLimitReached
-                    ? "Upgrade to add more concurrent journeys"
-                    : "Create a roadmap in seconds"}
-                </span>
+              <div className="flex flex-wrap items-center gap-3 text-sm text-[var(--text-secondary)]">
+                <AddBusinessDialog disabled={false} />
+                <span>Create a roadmap in seconds</span>
               </div>
             )}
           </div>
 
-          <div className="glass-panel relative w-full overflow-hidden border-white/5 px-6 py-6 sm:px-8 lg:w-1/3">
-            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-electric/20 blur-3xl" aria-hidden />
+          <Card variant="elevated" className="relative w-full overflow-hidden lg:w-1/3">
+            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-[var(--electric)]/20 blur-3xl" aria-hidden />
             <div className="relative space-y-3">
-              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">
+              <p className="text-xs uppercase tracking-[0.4em] text-[var(--text-secondary)]">
                 {highlightBusiness ? "Latest checkpoint" : "Blueprint"}
               </p>
               {highlightBusiness ? (
                 <>
-                  <h3 className="text-2xl font-semibold text-white">
+                  <h3 className="text-2xl font-semibold text-[var(--text-primary)]">
                     {highlightBusiness.business.name}
                   </h3>
-                  <p className="text-sm text-slate-300">
+                  <p className="text-sm text-[var(--text-secondary)]">
                     {highlightBusiness.completion.completed}/{highlightBusiness.completion.total} tasks complete ·
                     {" "}
                     {highlightBusiness.completion.percentage}% readiness
                   </p>
+                  {highlightBusiness.completion.total > 0 && (
+                    <Progress 
+                      value={highlightBusiness.completion.percentage} 
+                      className="h-2 mt-2"
+                    />
+                  )}
                   <Link
                     href={`/business/${highlightBusiness.business.id}`}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-electric transition hover:text-white"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--electric)] transition hover:text-[var(--text-primary)]"
                   >
                     Resume journey ↗
                   </Link>
                 </>
               ) : (
                 <>
-                  <h3 className="text-2xl font-semibold text-white">No journeys yet</h3>
-                  <p className="text-sm text-slate-300">
+                  <h3 className="text-2xl font-semibold text-[var(--text-primary)]">No journeys yet</h3>
+                  <p className="text-sm text-[var(--text-secondary)]">
                     Add your first business to unlock guided milestones, checklists, and launch rituals.
                   </p>
                 </>
               )}
             </div>
-          </div>
-        </section>
+          </Card>
+        </Card>
 
         <section className="space-y-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.4em] text-electric">Journeys</p>
-              <h2 className="text-2xl font-semibold">Active businesses</h2>
-              <p className="text-sm text-slate-400">
+              <Badge variant="default" className="uppercase tracking-widest mb-2">Journeys</Badge>
+              <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Active businesses</h2>
+              <p className="text-sm text-[var(--text-secondary)]">
                 {hasBusinesses
                   ? "Every card shows where momentum is compounding."
                   : "Launch your first roadmap to see progress here."}
@@ -269,49 +272,41 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
 
           {hasBusinesses ? (
-            <section className="grid gap-6 md:grid-cols-2">
+            <section className="grid gap-6 md:grid-cols-2 stagger-children">
               {businessesWithProgress.map(({ business, completion }) => (
                 <BusinessCard
                   key={business.id}
                   business={business}
                   completion={completion}
-                  plan={activeProfile.plan}
                 />
               ))}
             </section>
           ) : (
-            <section className="glass-panel flex flex-col gap-4 p-10 text-center">
-              <p className="text-xs uppercase tracking-[0.4em] text-electric">
-                No businesses yet
-              </p>
-              <h2 className="text-3xl font-semibold">Start your first roadmap</h2>
-              <p className="text-sm text-slate-400">
+            <Card variant="gradient" className="flex flex-col gap-4 p-10 text-center animate-fade-up">
+              <Badge variant="default" className="uppercase tracking-widest mx-auto">No businesses yet</Badge>
+              <h2 className="text-3xl font-semibold text-[var(--text-primary)]">Start your first roadmap</h2>
+              <p className="text-sm text-[var(--text-secondary)] max-w-lg mx-auto">
                 Add a business to unlock tailored checklists, wizard flows, and vetted vendor recommendations for every launch milestone.
               </p>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
-                <AddBusinessDialog disabled={freePlanLimitReached} />
-                {activeProfile.plan === "free" && (
-                  <p className="text-xs text-slate-500">
-                    Free plan includes one business. Upgrade whenever you need parallel launches.
-                  </p>
-                )}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center mt-4">
+                <AddBusinessDialog disabled={false} />
               </div>
-            </section>
+            </Card>
           )}
         </section>
 
         {hasBusinesses && highlightBusiness && (
-          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.02] px-6 py-4">
-            <p className="text-sm text-slate-300">
-              Each task includes <strong className="text-white">why</strong>/<strong className="text-white">how</strong> context and vetted tools. Keep cadence by revisiting your most recent business.
+          <Card variant="solid" className="flex flex-wrap items-center justify-between gap-4 animate-fade-up delay-200">
+            <p className="text-sm text-[var(--text-secondary)]">
+              Each task includes <strong className="text-[var(--text-primary)]">why</strong>/<strong className="text-[var(--text-primary)]">how</strong> context and vetted tools. Keep cadence by revisiting your most recent business.
             </p>
             <Link
               href={`/business/${highlightBusiness.business.id}`}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-electric transition hover:text-white"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--electric)] transition hover:text-[var(--text-primary)]"
             >
               Jump into {highlightBusiness.business.name} ↗
             </Link>
-          </section>
+          </Card>
         )}
       </main>
     </div>

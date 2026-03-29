@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const TOUR_STEPS = [
@@ -28,16 +28,13 @@ const TOUR_STEPS = [
 
 export function OnboardingTour({ businessId, onComplete }: { businessId: string; onComplete?: () => void }) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [show, setShow] = useState(false);
-  const [completed, setCompleted] = useState(false);
-
-  useEffect(() => {
-    // Check if user has completed tour
-    const hasCompleted = localStorage.getItem(`tour-${businessId}`);
-    if (!hasCompleted) {
-      setShow(true);
+  const [show] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
     }
-  }, [businessId]);
+    return !localStorage.getItem(`tour-${businessId}`);
+  });
+  const [completed, setCompleted] = useState(false);
 
   if (!show || completed) return null;
 

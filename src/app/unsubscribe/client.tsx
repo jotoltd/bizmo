@@ -4,6 +4,12 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { unsubscribeEmailAction, getUnsubscribeInfoAction } from "./actions";
 
+type UnsubscribeEmailType = "invitation" | "invitation_response" | "activity" | "announcement";
+
+const isUnsubscribeEmailType = (value: string): value is UnsubscribeEmailType => {
+  return ["invitation", "invitation_response", "activity", "announcement"].includes(value);
+};
+
 export default function UnsubscribePage({
   userId,
   emailType,
@@ -28,9 +34,15 @@ export default function UnsubscribePage({
 
     // Then perform unsubscribe
     startTransition(async () => {
+      if (!isUnsubscribeEmailType(emailType)) {
+        setStatus("error");
+        setMessage("Invalid email preference type.");
+        return;
+      }
+
       const result = await unsubscribeEmailAction({
         userId,
-        emailType: emailType as any,
+        emailType,
         token,
       });
 

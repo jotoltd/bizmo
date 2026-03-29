@@ -20,9 +20,9 @@ export default function AboutPage() {
             We built Bizno to make launch work easier.
           </h1>
           <p className="fade-up fade-up-delay-2 max-w-3xl text-base text-slate-300 sm:text-lg">
-            Most teams don&apos;t fail because they lack effort — they fail because the work is
-            scattered. Bizno brings everything into one clear flow so people know what to do,
-            when to do it, and how much progress they&apos;ve made.
+            We believe anyone with a great idea should be able to turn it into a real business. 
+            Bizno is completely free because we partner with the tools you need, 
+            earning a small commission when you use our exclusive deals — at no extra cost to you.
           </p>
         </div>
       </section>

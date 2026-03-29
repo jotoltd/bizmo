@@ -1,6 +1,10 @@
 import { getSupabaseUser } from "@/lib/auth";
 import { MarketingPageShell } from "@/components/marketing/marketing-page-shell";
 import { MarketingCta } from "@/components/marketing/marketing-cta";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -41,100 +45,99 @@ export default async function Home() {
 
   return (
     <MarketingPageShell ctaHref={primaryHref} ctaLabel={primaryLabel}>
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-10 shadow-[0_28px_80px_rgba(3,7,18,0.6)] sm:px-10 sm:py-14">
-        <div
-          className="pointer-events-none absolute -right-20 top-8 h-64 w-64 rounded-full bg-electric/20 blur-3xl glow-pulse"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-sky-400/15 blur-3xl glow-pulse"
-          aria-hidden
-        />
+      <Card variant="gradient" hover="lift" padding="lg" className="relative overflow-hidden animate-fade-up">
+        <div className="absolute -right-20 top-8 h-64 w-64 rounded-full bg-[var(--electric)]/10 blur-3xl glow-pulse" aria-hidden />
+        <div className="absolute -left-16 bottom-0 h-44 w-44 rounded-full bg-[var(--purple)]/10 blur-3xl glow-pulse" aria-hidden />
         <div className="grid-mask absolute inset-0 opacity-40" aria-hidden />
         <div className="relative grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div className="space-y-8">
-            <p className="fade-up text-xs uppercase tracking-[0.55em] text-electric">Launch without chaos</p>
-            <div className="fade-up fade-up-delay-1 space-y-5">
-              <h1 className="font-display max-w-2xl text-4xl font-semibold leading-tight text-white sm:text-6xl sm:leading-[1.02]">
+            <Badge variant="default" className="uppercase tracking-widest animate-fade-up">Launch without chaos</Badge>
+            <div className="space-y-5 animate-fade-up delay-100">
+              <h1 className="font-display max-w-2xl text-4xl font-semibold leading-tight text-[var(--text-primary)] sm:text-6xl sm:leading-[1.02]">
                 From idea to launched,
                 <br />
-                <span className="text-electric">without the overwhelm.</span>
+                <span className="text-gradient">without the overwhelm.</span>
               </h1>
-              <p className="max-w-2xl text-base text-slate-300 sm:text-lg">
+              <p className="max-w-2xl text-base text-[var(--text-secondary)] sm:text-lg">
                 Stop drowning in todos and scattered notes. Get a proven roadmap, 
                 step-by-step guidance, and exclusive deals on the tools you need — completely free.
               </p>
             </div>
-            <div className="fade-up fade-up-delay-2 flex flex-wrap items-center gap-3">
-              <Link
-                href={primaryHref}
-                className="inline-flex rounded-lg bg-electric px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110"
-              >
-                {signedIn ? "Go to dashboard" : "Launch your business — Free"}
+            <div className="flex flex-wrap items-center gap-3 animate-fade-up delay-200">
+              <Link href={primaryHref}>
+                <Button size="lg">
+                  {signedIn ? "Go to dashboard" : "Launch your business — Free"}
+                </Button>
               </Link>
-              <Link
-                href="/pricing"
-                className="inline-flex rounded-lg border border-white/10 px-6 py-3 text-sm text-slate-300 transition hover:border-white/20 hover:text-white"
-              >
-                See how it works
+              <Link href="/pricing">
+                <Button variant="outline" size="lg">See how it works</Button>
               </Link>
             </div>
-            <div className="fade-up fade-up-delay-3 flex flex-wrap gap-5 text-xs text-slate-400 sm:text-sm">
-              <span>✓ Proven 12-step roadmap</span>
-              <span>✓ Exclusive tool discounts</span>
-              <span>✓ Team collaboration</span>
+            <div className="flex flex-wrap gap-5 text-xs text-[var(--text-tertiary)] sm:text-sm animate-fade-up delay-300">
+              <span className="flex items-center gap-1"><span className="text-[var(--success)]">✓</span> Proven 12-step roadmap</span>
+              <span className="flex items-center gap-1"><span className="text-[var(--success)]">✓</span> Exclusive tool discounts</span>
+              <span className="flex items-center gap-1"><span className="text-[var(--success)]">✓</span> Team collaboration</span>
             </div>
           </div>
 
-          <div className="glass-panel fade-up fade-up-delay-2 relative overflow-hidden p-6 sm:p-7">
-            <div
-              className="pointer-events-none absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-sky-400/15 blur-2xl"
-              aria-hidden
-            />
+          <Card variant="elevated" className="relative overflow-hidden p-6 sm:p-7 animate-fade-up delay-200">
+            <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-[var(--electric)]/10 blur-2xl" aria-hidden />
             <div className="relative space-y-5">
               <div className="flex items-center justify-between">
-                <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Launch Progress</p>
-                <span className="rounded-full bg-electric/20 px-2 py-0.5 text-[0.65rem] font-semibold text-electric">
-                  8 of 12 complete
-                </span>
+                <Badge variant="secondary" className="uppercase tracking-widest text-[10px]">Launch Progress</Badge>
+                <Badge variant="success" size="sm">On track</Badge>
               </div>
-
+              
               <div className="space-y-3">
-                {[
-                  { label: "Foundation", progress: 100 },
-                  { label: "Branding", progress: 100 },
-                  { label: "Digital Presence", progress: 60 },
-                  { label: "Launch", progress: 20 },
-                ].map((row) => (
-                  <div key={row.label} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm text-slate-300">
-                      <span>{row.label}</span>
-                      <span className="text-xs text-slate-500">{row.progress}%</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-white/10">
-                      <div
-                        className="h-2 rounded-full bg-electric"
-                        style={{ width: `${row.progress}%` }}
-                      />
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-[var(--electric-muted)] flex items-center justify-center">
+                    <svg className="h-5 w-5 text-[var(--electric)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
-                ))}
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[var(--text-primary)]">Business registered</p>
+                    <Progress value={100} variant="success" className="h-1.5 mt-1" />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-[var(--electric-muted)] flex items-center justify-center">
+                    <svg className="h-5 w-5 text-[var(--electric)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[var(--text-primary)]">Website setup</p>
+                    <Progress value={65} className="h-1.5 mt-1" />
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-[var(--dark-1)] flex items-center justify-center">
+                    <svg className="h-5 w-5 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-[var(--text-secondary)]">Legal compliance</p>
+                    <div className="h-1.5 rounded-full bg-[var(--dark-1)] mt-1" />
+                  </div>
+                </div>
               </div>
-
-              <div className="rounded-xl border border-white/10 bg-black/25 p-4">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Current step</p>
-                <p className="mt-2 text-sm text-slate-200">
-                  Set up your website with Shopify — Get 20% off your first year
-                </p>
-                <button className="mt-3 text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
-                  Claim deal ↗
-                </button>
+              
+              <div className="pt-2 border-t border-[var(--divider)]">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">Overall readiness</span>
+                  <span className="font-semibold text-[var(--electric)]">65%</span>
+                </div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
-      </section>
+      </Card>
 
+      {/* Feature cards */}
       <section className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[
           {
@@ -150,34 +153,37 @@ export default async function Home() {
             body: "Watch your business come to life with clear phases, progress bars, and team accountability.",
           },
         ].map((card) => (
-          <article
+          <Card
             key={card.title}
-            className="glass-panel fade-up p-5 transition-transform duration-200 hover:-translate-y-1"
+            variant="default"
+            hover="lift"
+            padding="default"
+            className="animate-fade-up"
           >
-            <h2 className="font-display text-base font-semibold text-white">{card.title}</h2>
-            <p className="mt-2 text-sm text-slate-400">{card.body}</p>
-          </article>
+            <h2 className="font-display text-base font-semibold text-[var(--text-primary)]">{card.title}</h2>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">{card.body}</p>
+          </Card>
         ))}
       </section>
 
       {/* Testimonials */}
       <section className="mt-20">
-        <p className="text-center text-xs uppercase tracking-[0.5em] text-electric mb-8">Loved by founders</p>
+        <Badge variant="default" className="uppercase tracking-widest mx-auto block w-fit mb-8">Loved by founders</Badge>
         <div className="grid gap-6 md:grid-cols-3">
           {TESTIMONIALS.map((t, i) => (
-            <div key={i} className="glass-panel p-6 space-y-4">
-              <p className="text-sm text-slate-300 italic">&ldquo;{t.quote}&rdquo;</p>
-              <div>
-                <p className="text-sm font-semibold text-white">{t.author}</p>
-                <p className="text-xs text-slate-500">{t.role}</p>
+            <Card key={i} variant="default" padding="default" className="animate-fade-up">
+              <p className="text-sm text-[var(--text-secondary)] italic">&ldquo;{t.quote}&rdquo;</p>
+              <div className="mt-4">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{t.author}</p>
+                <p className="text-xs text-[var(--text-tertiary)]">{t.role}</p>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
 
       {/* Trust badges */}
-      <section className="mt-16 rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8">
+      <Card variant="solid" padding="lg" className="mt-16">
         <div className="grid gap-6 md:grid-cols-3">
           {[
             { stat: "£500+", label: "average savings on tools" },
@@ -186,21 +192,21 @@ export default async function Home() {
           ].map((item) => (
             <div
               key={item.label}
-              className="fade-up rounded-2xl border border-white/5 bg-black/20 p-5 transition-transform duration-200 hover:-translate-y-1"
+              className="text-center animate-fade-up"
             >
-              <p className="font-display text-3xl font-semibold text-electric">{item.stat}</p>
-              <p className="mt-2 text-sm text-slate-300">{item.label}</p>
+              <p className="font-display text-3xl font-semibold text-[var(--electric)]">{item.stat}</p>
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">{item.label}</p>
             </div>
           ))}
         </div>
-      </section>
+      </Card>
 
       {/* Partner logos */}
       <section className="mt-16 text-center">
-        <p className="text-xs uppercase tracking-[0.4em] text-slate-500 mb-6">Exclusive deals with</p>
+        <p className="text-xs uppercase tracking-widest text-[var(--text-tertiary)] mb-6">Exclusive deals with</p>
         <div className="flex flex-wrap justify-center gap-8 items-center opacity-60">
           {["Shopify", "QuickBooks", "Canva", "Namecheap", "Google Workspace", "Superscript"].map((partner) => (
-            <span key={partner} className="text-sm text-slate-400 font-medium">{partner}</span>
+            <span key={partner} className="text-sm text-[var(--text-secondary)] font-medium">{partner}</span>
           ))}
         </div>
       </section>

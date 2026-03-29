@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getCurrentSystemStats, getSystemMetrics } from "@/lib/admin/extended-actions";
+import { getCurrentSystemStats } from "@/lib/admin/extended-actions";
 
 type SystemStats = {
   totalUsers: number;

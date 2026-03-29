@@ -122,17 +122,7 @@ function EditUserForm({
             <option value="admin">Admin</option>
           </select>
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400">Plan</label>
-          <select
-            name="plan"
-            defaultValue={user.plan}
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-electric focus:outline-none"
-          >
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-          </select>
-        </div>
+        {/* Removed Plan dropdown - everything is free */}
         <div className="space-y-1">
           <label className="text-xs text-slate-400">User Type</label>
           <select
@@ -178,7 +168,6 @@ export function UsersManager({
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [planFilter, setPlanFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
@@ -187,7 +176,6 @@ export function UsersManager({
   const users = initialUsers.filter((u) => {
     if (search && !u.email.toLowerCase().includes(search.toLowerCase()))
       return false;
-    if (planFilter && u.plan !== planFilter) return false;
     if (typeFilter && u.user_type !== typeFilter) return false;
     return true;
   });
@@ -205,18 +193,7 @@ export function UsersManager({
             placeholder="Search by email..."
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-slate-400">Plan</label>
-          <select
-            value={planFilter}
-            onChange={(e) => setPlanFilter(e.target.value)}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-electric focus:outline-none"
-          >
-            <option value="">All</option>
-            <option value="free">Free</option>
-            <option value="pro">Pro</option>
-          </select>
-        </div>
+        {/* Removed Plan filter - everything is free */}
         <div className="space-y-1">
           <label className="text-xs text-slate-400">Type</label>
           <select
@@ -253,7 +230,6 @@ export function UsersManager({
             <tr className="border-b border-white/5 text-left text-xs uppercase tracking-wider text-slate-500">
               <th className="px-5 py-3">Email</th>
               <th className="px-5 py-3">Role</th>
-              <th className="px-5 py-3">Plan</th>
               <th className="px-5 py-3">Type</th>
               <th className="px-5 py-3">Last Active</th>
               <th className="px-5 py-3">Status</th>
@@ -272,9 +248,6 @@ export function UsersManager({
                   >
                     {user.role}
                   </span>
-                </td>
-                <td className="px-5 py-3 capitalize text-slate-300">
-                  {user.plan}
                 </td>
                 <td className="px-5 py-3 capitalize text-slate-300">
                   {user.user_type}

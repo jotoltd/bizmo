@@ -31,6 +31,37 @@ const FILTERS = ["all", "tasks", "deadlines", "team"] as const;
 
 type NotificationFilter = (typeof FILTERS)[number];
 
+const getStringData = (data: Record<string, unknown> | null | undefined, key: string) => {
+  const value = data?.[key];
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+const getNotificationHref = (notification: {
+  type: string;
+  data: Record<string, unknown>;
+}) => {
+  const businessId = getStringData(notification.data, "business_id");
+
+  if (businessId) {
+    return `/business/${businessId}`;
+  }
+
+  if (notification.type === "invitation_received") {
+    return "/dashboard";
+  }
+
+  if (notification.type === "announcement" || notification.type === "system_alert") {
+    return "/notifications";
+  }
+
+  return null;
+};
+
 const NOTIFICATION_FILTER_TYPES: Record<Exclude<NotificationFilter, "all">, string[]> = {
   tasks: ["task_completed", "task_assigned"],
   deadlines: ["deadline_approaching", "deadline_missed"],
@@ -96,7 +127,6 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
     <div className="min-h-screen">
       <TopNav
         email={profile.email}
-        plan={profile.plan}
         role={profile.role}
         invitations={[]}
         onAcceptInvitation={async (invitationId: string) => {
@@ -160,64 +190,93 @@ export default async function NotificationsPage({ searchParams }: NotificationsP
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredNotifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`glass-panel flex items-start gap-4 border p-4 transition ${
-                    !notification.read
-                      ? "border-electric/30 bg-electric/5"
-                      : "border-white/10 bg-white/[0.02] hover:border-white/20"
-                  }`}
-                >
-                  <div className="rounded-full border border-white/10 bg-white/[0.04] p-2">{getIcon(notification.type)}</div>
-                  <div className="flex-1">
-                    <div className="mb-1 flex items-center justify-between gap-3">
-                      <h3 className="font-medium text-white">{notification.title}</h3>
-                      {!notification.read && (
-                        <span className="rounded-full border border-electric/40 bg-electric/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-electric">
-                          New
-                        </span>
+              {filteredNotifications.map((notification) => {
+                const notificationHref = getNotificationHref(notification);
+                const actorEmail =
+                  getStringData(notification.data, "actor_email") ??
+                  getStringData(notification.data, "inviter_email");
+                const businessName = getStringData(notification.data, "business_name");
+                const contextParts = [
+                  actorEmail ? `By ${actorEmail}` : null,
+                  businessName ? `Business: ${businessName}` : null,
+                ].filter(Boolean);
+
+                return (
+                  <div
+                    key={notification.id}
+                    className={`glass-panel flex items-start gap-4 border p-4 transition ${
+                      !notification.read
+                        ? "border-electric/30 bg-electric/5"
+                        : "border-white/10 bg-white/[0.02] hover:border-white/20"
+                    }`}
+                  >
+                    <div className="rounded-full border border-white/10 bg-white/[0.04] p-2">{getIcon(notification.type)}</div>
+                    <div className="flex-1">
+                      <div className="mb-1 flex items-center justify-between gap-3">
+                        {notificationHref ? (
+                          <Link href={notificationHref} className="font-medium text-white transition hover:text-electric">
+                            {notification.title}
+                          </Link>
+                        ) : (
+                          <h3 className="font-medium text-white">{notification.title}</h3>
+                        )}
+                        {!notification.read && (
+                          <span className="rounded-full border border-electric/40 bg-electric/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-electric">
+                            New
+                          </span>
+                        )}
+                      </div>
+                      {notification.body && <p className="text-sm text-slate-400">{notification.body}</p>}
+                      {contextParts.length > 0 && (
+                        <p className="mt-1 text-xs text-slate-500">{contextParts.join(" · ")}</p>
+                      )}
+                      <p className="mt-1 text-xs text-slate-500">
+                        {new Date(notification.created_at).toLocaleString()}
+                      </p>
+                      {notificationHref && (
+                        <div className="mt-2">
+                          <Link
+                            href={notificationHref}
+                            className="text-xs font-medium text-electric transition hover:text-electric/80"
+                          >
+                            Open related item →
+                          </Link>
+                        </div>
+                      )}
+                      {notification.type === "invitation_received" && (
+                        <div className="mt-3 flex gap-2">
+                          <form
+                            action={async () => {
+                              "use server";
+                              const invitationId = notification.data?.invitation_id as string;
+                              if (invitationId) {
+                                await acceptBusinessInvitationAction({ invitationId });
+                              }
+                            }}
+                          >
+                            <button className="rounded-lg bg-electric px-3 py-1.5 text-xs font-semibold text-black transition hover:brightness-110">
+                              Accept
+                            </button>
+                          </form>
+                          <form
+                            action={async () => {
+                              "use server";
+                              const invitationId = notification.data?.invitation_id as string;
+                              if (invitationId) {
+                                await rejectBusinessInvitationAction({ invitationId });
+                              }
+                            }}
+                          >
+                            <button className="rounded-lg border border-white/15 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-white/30 hover:bg-white/10 hover:text-white">
+                              Decline
+                            </button>
+                          </form>
+                        </div>
                       )}
                     </div>
-                    {notification.body && (
-                      <p className="text-sm text-slate-400">{notification.body}</p>
-                    )}
-                    <p className="mt-1 text-xs text-slate-500">
-                      {new Date(notification.created_at).toLocaleDateString()}
-                    </p>
-                    {notification.type === "invitation_received" && (
-                      <div className="mt-3 flex gap-2">
-                        <form
-                          action={async () => {
-                            "use server";
-                            const invitationId = notification.data?.invitation_id as string;
-                            if (invitationId) {
-                              await acceptBusinessInvitationAction({ invitationId });
-                            }
-                          }}
-                        >
-                          <button className="rounded-lg bg-electric px-3 py-1.5 text-xs font-semibold text-black transition hover:brightness-110">
-                            Accept
-                          </button>
-                        </form>
-                        <form
-                          action={async () => {
-                            "use server";
-                            const invitationId = notification.data?.invitation_id as string;
-                            if (invitationId) {
-                              await rejectBusinessInvitationAction({ invitationId });
-                            }
-                          }}
-                        >
-                          <button className="rounded-lg border border-white/15 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:border-white/30 hover:bg-white/10 hover:text-white">
-                            Decline
-                          </button>
-                        </form>
-                      </div>
-                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

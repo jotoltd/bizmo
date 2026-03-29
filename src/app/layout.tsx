@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Sora, Manrope, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
+import { CookieConsent } from "@/components/cookie-consent";
 import "./globals.css";
 
 /**
@@ -44,6 +46,13 @@ export default function RootLayout({
       <body className="min-h-full bg-void text-slate-100">
         {children}
         <Analytics />
+        <Script
+          defer
+          data-domain="bizno.co.uk"
+          src="https://plausible.io/js/script.js"
+          strategy="lazyOnload"
+        />
+        <CookieConsent />
       </body>
     </html>
   );

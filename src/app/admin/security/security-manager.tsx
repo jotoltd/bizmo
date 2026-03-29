@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { getLoginHistory, getRateLimitConfigs, upsertRateLimitConfig } from "@/lib/admin/extended-actions";
+import { upsertRateLimitConfig } from "@/lib/admin/extended-actions";
 
 type LoginEvent = {
   id: string;
@@ -32,7 +32,7 @@ export function SecurityManager({
   initialRateLimits: RateLimitConfig[];
 }) {
   const router = useRouter();
-  const [logins, setLogins] = useState(initialLogins);
+  const [logins] = useState(initialLogins);
   const [rateLimits, setRateLimits] = useState(initialRateLimits);
   const [eventFilter, setEventFilter] = useState("");
   const [activeTab, setActiveTab] = useState<"logins" | "ratelimits">("logins");

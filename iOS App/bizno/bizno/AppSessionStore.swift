@@ -14,15 +14,19 @@ final class AppSessionStore: ObservableObject {
     @Published var session: SupabaseSession?
     @Published var notifications: [UserNotification] = []
     @Published var emailPreferences: UserEmailPreferences?
+    @Published var businesses: [Business] = []
+    @Published var pendingInvitations: [Invitation] = []
+    @Published var selectedBusinessFilter: BusinessFilter = .all
     @Published var isBusy = false
     @Published var message: String?
     @Published var selectedFilter: NotificationFilter = .all
 
-    private let api = SupabaseAPI()
+    let api = SupabaseAPI()
     private let notificationService = NotificationService.shared
     private let storageKey = "bizno.session"
     private var seenNotificationIDs = Set<String>()
-    private var realtimeTask: Task<Void, Never>?
+    // nonisolated(unsafe) allows access from deinit for cancellation only
+    nonisolated(unsafe) private var realtimeTask: Task<Void, Never>?
     private var tokenObserver: NSObjectProtocol?
 
     var filteredNotifications: [UserNotification] {
@@ -49,7 +53,18 @@ final class AppSessionStore: ObservableObject {
         Task {
             await self.notificationService.configure()
             if self.session != nil {
-                try? await self.refreshAllData()
+                do {
+                    try await self.refreshAllData()
+                } catch APIError.tokenExpired {
+                    do {
+                        _ = try await self.refreshSession()
+                        try await self.refreshAllData()
+                    } catch {
+                        self.message = error.localizedDescription
+                    }
+                } catch {
+                    self.message = error.localizedDescription
+                }
                 self.startRealtimeSync()
                 await self.notificationService.ensureAuthorizationAndRegisterForRemotePush()
                 await self.syncDeviceTokenIfPossible()
@@ -87,19 +102,24 @@ final class AppSessionStore: ObservableObject {
         if let tokenObserver {
             NotificationCenter.default.removeObserver(tokenObserver)
         }
-        Task { @MainActor in
-            stopRealtimeSync()
-        }
+        realtimeTask?.cancel()
     }
 
     func signOut() {
+        // Clear secure storage
+        if let userId = session?.user.id {
+            try? SecureKeychain.shared.deleteSupabaseSession(userId: userId)
+        }
+        UserDefaults.standard.removeObject(forKey: "bizno.lastUserId")
+        
         session = nil
         notifications = []
         emailPreferences = nil
+        businesses = []
+        pendingInvitations = []
         message = nil
         screenState = .signedOut
         stopRealtimeSync()
-        UserDefaults.standard.removeObject(forKey: storageKey)
     }
 
     func refreshAll() async {
@@ -135,8 +155,11 @@ final class AppSessionStore: ObservableObject {
     }
 
     private func refreshAllData() async throws {
-        try await refreshNotifications(notifyNew: false)
-        try await refreshPreferences()
+        async let notificationsTask: () = refreshNotifications(notifyNew: false)
+        async let preferencesTask: () = refreshPreferences()
+        async let businessesTask: () = refreshBusinesses()
+        async let invitationsTask: () = refreshInvitations()
+        _ = try await (notificationsTask, preferencesTask, businessesTask, invitationsTask)
     }
 
     private func refreshNotifications(notifyNew: Bool = true) async throws {
@@ -167,6 +190,66 @@ final class AppSessionStore: ObservableObject {
         )
     }
 
+    private func refreshBusinesses() async throws {
+        guard let session else { return }
+        do {
+            businesses = try await api.fetchBusinesses(accessToken: session.accessToken, userID: session.user.id)
+        } catch APIError.tokenExpired {
+            try await refreshSessionAndRetry()
+        }
+    }
+
+    private func refreshSessionAndRetry() async throws {
+        let refreshed = try await refreshSession()
+        businesses = try await api.fetchBusinesses(accessToken: refreshed.accessToken, userID: refreshed.user.id)
+    }
+
+    private func refreshSession() async throws -> SupabaseSession {
+        guard let session else {
+            throw APIError.tokenExpired
+        }
+        let refreshed = try await api.refreshToken(refreshToken: session.refreshToken)
+        apply(session: refreshed)
+        return refreshed
+    }
+
+    private func refreshInvitations() async throws {
+        guard let session else { return }
+        pendingInvitations = try await api.fetchPendingInvitations(accessToken: session.accessToken)
+    }
+
+    // MARK: - Public Business Methods
+
+    func createBusiness(name: String, type: BusinessType) async {
+        guard let session else { return }
+        await perform {
+            _ = try await self.api.createBusiness(name: name, type: type, userID: session.user.id, accessToken: session.accessToken)
+            self.message = "Business created successfully."
+            try await self.refreshBusinesses()
+        }
+    }
+
+    func deleteBusiness(_ business: Business) async {
+        guard let session else { return }
+        await perform {
+            try await self.api.deleteBusiness(businessID: business.id, accessToken: session.accessToken)
+            self.message = "Business deleted."
+            try await self.refreshBusinesses()
+        }
+    }
+
+    // MARK: - Public Invitation Methods
+
+    func respondToInvitation(_ invitation: Invitation, accept: Bool) async {
+        guard let session else { return }
+        await perform {
+            try await self.api.respondToInvitation(invitationID: invitation.id, accept: accept, accessToken: session.accessToken)
+            self.message = accept ? "Invitation accepted." : "Invitation declined."
+            try await self.refreshInvitations()
+            try await self.refreshBusinesses()
+        }
+    }
+
     private func perform(_ operation: @escaping () async throws -> Void) async {
         message = nil
         isBusy = true
@@ -192,25 +275,30 @@ final class AppSessionStore: ObservableObject {
                 screenState = session == nil ? .signedOut : .signedIn
             }
         }
-
-        guard let data = UserDefaults.standard.data(forKey: storageKey) else {
+        
+        if let lastUserId = UserDefaults.standard.string(forKey: "bizno.lastUserId"),
+           let secureSession = try? SecureKeychain.shared.loadSupabaseSession(userId: lastUserId) {
+            session = secureSession
             return
         }
 
-        do {
-            let decoded = try JSONDecoder().decode(SupabaseSession.self, from: data)
-            session = decoded
-        } catch {
-            UserDefaults.standard.removeObject(forKey: storageKey)
+        if let anySession = try? SecureKeychain.shared.loadAnySupabaseSession() {
+            session = anySession
+            UserDefaults.standard.set(anySession.user.id, forKey: "bizno.lastUserId")
+            return
         }
+
+        session = nil
     }
 
     private func persistSession(_ session: SupabaseSession) {
         do {
-            let data = try JSONEncoder().encode(session)
-            UserDefaults.standard.set(data, forKey: storageKey)
+            // Store session securely in Keychain
+            try SecureKeychain.shared.saveSupabaseSession(session)
+            // Store only the user ID in UserDefaults (non-sensitive) for session recovery
+            UserDefaults.standard.set(session.user.id, forKey: "bizno.lastUserId")
         } catch {
-            message = "Unable to persist session locally."
+            message = "Unable to persist session securely."
         }
     }
 
@@ -233,7 +321,7 @@ final class AppSessionStore: ObservableObject {
         }
     }
 
-    private func stopRealtimeSync() {
+    nonisolated private func stopRealtimeSync() {
         realtimeTask?.cancel()
         realtimeTask = nil
     }

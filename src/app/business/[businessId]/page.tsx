@@ -41,7 +41,6 @@ export default async function BusinessPage({ params, searchParams }: BusinessPag
     <div className="min-h-screen">
       <TopNav 
         email={profile.email} 
-        plan={profile.plan} 
         role={profile.role} 
         invitations={userPendingInvitations}
         onAcceptInvitation={async (invitationId: string) => {

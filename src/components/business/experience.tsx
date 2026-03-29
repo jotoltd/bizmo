@@ -5,7 +5,6 @@ import type {
   Business,
   BusinessActivityLog,
   BusinessInvitation,
-  BusinessMembershipRole,
   BusinessTeamMember,
   RoadmapPhase,
   RoadmapStep,
@@ -23,7 +22,6 @@ import {
   updateBusinessViewAction,
   updateBusinessMemberRoleAction,
 } from "@/app/dashboard/actions";
-import { useAffiliateTracking } from "@/hooks/use-affiliate-tracking";
 
 const VIEW_MODES = [
   { id: "checklist", label: "Checklist" },
@@ -104,7 +102,6 @@ export const BusinessExperience = ({
   const [invitePending, startInviteTransition] = useTransition();
   const [viewPending, startViewTransition] = useTransition();
   const [taskPending, startTaskTransition] = useTransition();
-  const { trackClick } = useAffiliateTracking(business.id);
 
   const completedSet = useMemo(
     () => new Set<string>(completedTasks ?? []),

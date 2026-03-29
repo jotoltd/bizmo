@@ -11,8 +11,6 @@ import type { Announcement } from "@/types";
 
 const AUDIENCES = [
   { value: "all", label: "All Users" },
-  { value: "free", label: "Free Plan" },
-  { value: "pro", label: "Pro Plan" },
   { value: "freelancer", label: "Freelancers" },
   { value: "agency", label: "Agencies" },
   { value: "enterprise", label: "Enterprise" },

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getSupportTickets, updateTicketStatus } from "@/lib/admin/extended-actions";
+import { updateTicketStatus } from "@/lib/admin/extended-actions";
 
 type SupportTicket = {
   id: string;
@@ -44,13 +44,11 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function SupportTicketsManager({
   initialTickets,
-  adminUsers,
 }: {
   initialTickets: SupportTicket[];
-  adminUsers: { id: string; email: string }[];
 }) {
   const router = useRouter();
-  const [tickets, setTickets] = useState(initialTickets);
+  const [tickets] = useState(initialTickets);
   const [statusFilter, setStatusFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");

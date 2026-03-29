@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // ── Audit Logs ────────────────────────────────────────────
 
@@ -260,16 +259,6 @@ export async function getSystemMetrics(timeRange: "1h" | "24h" | "7d" | "30d" = 
 export async function getCurrentSystemStats() {
   const supabase = await createSupabaseServerClient();
   await requireAdmin();
-
-  const safeQuery = async (table: string, queryFn: () => Promise<{ count: number | null; error?: unknown }>) => {
-    try {
-      const result = await queryFn();
-      return result.count ?? 0;
-    } catch (e) {
-      console.error(`${table} query error:`, e);
-      return 0;
-    }
-  };
 
   try {
     const usersRes = await supabase.from("profiles").select("id, last_active", { count: "exact", head: true });

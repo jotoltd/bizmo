@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireProfile, requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { envServer } from "@/lib/env-server";
 import {
   sendBusinessInvitationEmail,
@@ -11,8 +11,7 @@ import {
 import { dispatchPushToUser } from "@/lib/push/dispatch";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getTasksForPlan } from "@/lib/checklist";
-import type { UserNotification, UserEmailPreferences } from "@/types";
+import type { UserNotification } from "@/types";
 
 const createUserNotification = async ({
   userId,
@@ -126,7 +125,7 @@ export const createBusinessAction = async (
     return { error: "Please provide a valid business name and type." };
   }
 
-  const [user, profile] = await Promise.all([requireUser(), requireProfile()]);
+  const user = await requireUser();
   const supabase = await createSupabaseServerClient();
 
   // App is completely free - no business limits
@@ -478,6 +477,8 @@ export const acceptBusinessInvitationAction = async (
     data: {
       business_id: invitation.business_id,
       invitation_id: invitation.id,
+      business_name: business?.name ?? undefined,
+      actor_email: invitation.invited_email,
     },
   });
 
@@ -548,6 +549,8 @@ export const rejectBusinessInvitationAction = async (
     data: {
       business_id: invitation.business_id,
       invitation_id: invitation.id,
+      business_name: business?.name ?? undefined,
+      actor_email: invitation.invited_email,
     },
   });
 
@@ -662,7 +665,11 @@ export const removeBusinessMemberAction = async (
     type: "member_removed",
     title: "Removed from business",
     body: `You were removed from ${business.name}.`,
-    data: { business_id: parsed.data.businessId },
+    data: {
+      business_id: parsed.data.businessId,
+      business_name: business.name,
+      actor_email: user.email ?? undefined,
+    },
   });
 
   await logBusinessActivity({
@@ -677,17 +684,15 @@ export const removeBusinessMemberAction = async (
   return { success: true };
 };
 
-export const toggleTaskCompletionAction = async (
-  input: z.infer<typeof toggleSchema>
-) => {
+export const toggleTaskCompletionAction = async (input: z.infer<typeof toggleSchema>) => {
   const parsed = toggleSchema.safeParse(input);
   if (!parsed.success) return { error: "Invalid task update." };
 
-  const [user, profile] = await Promise.all([requireUser(), requireProfile()]);
+  const user = await requireUser();
   const supabase = await createSupabaseServerClient();
   const { data: business, error: fetchError } = await supabase
     .from("businesses")
-    .select("id, user_id, completed_tasks")
+    .select("id, user_id, name, completed_tasks")
     .eq("id", parsed.data.businessId)
     .single();
 
@@ -708,12 +713,6 @@ export const toggleTaskCompletionAction = async (
       return { error: "Business not found." };
     }
   }
-
-  const availableTasks = getTasksForPlan(profile.plan).map((task) => task.id);
-  // All tasks available for free - no plan restrictions
-  // if (!availableTasks.includes(parsed.data.taskId)) {
-  //   return { error: "This task is not available on your current plan." };
-  // }
 
   const currentTasks = new Set<string>(business.completed_tasks ?? []);
   if (parsed.data.completed) currentTasks.add(parsed.data.taskId);
@@ -745,6 +744,8 @@ export const toggleTaskCompletionAction = async (
       data: {
         business_id: parsed.data.businessId,
         task_id: parsed.data.taskId,
+        business_name: business.name,
+        actor_email: user.email ?? undefined,
       },
     });
   }
@@ -918,6 +919,8 @@ export const updateBusinessMemberRoleAction = async (
     data: {
       business_id: parsed.data.businessId,
       role: parsed.data.role,
+      business_name: business.name,
+      actor_email: user.email ?? undefined,
     },
   });
 
@@ -1010,7 +1013,11 @@ export const transferBusinessOwnershipAction = async (
     type: "ownership_transferred",
     title: "You are now business owner",
     body: `${business.name} ownership was transferred to you.`,
-    data: { business_id: parsed.data.businessId },
+    data: {
+      business_id: parsed.data.businessId,
+      business_name: business.name,
+      actor_email: user.email ?? undefined,
+    },
   });
 
   await createUserNotification({
@@ -1021,6 +1028,8 @@ export const transferBusinessOwnershipAction = async (
     data: {
       business_id: parsed.data.businessId,
       new_owner_id: parsed.data.newOwnerId,
+      business_name: business.name,
+      actor_email: user.email ?? undefined,
     },
   });
 

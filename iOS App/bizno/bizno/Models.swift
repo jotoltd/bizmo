@@ -41,6 +41,7 @@ struct UserNotification: Codable, Identifiable {
     let type: String
     let title: String
     let body: String?
+    let data: NotificationMetadata?
     let read: Bool
     let createdAt: Date
 
@@ -49,8 +50,27 @@ struct UserNotification: Codable, Identifiable {
         case type
         case title
         case body
+        case data
         case read
         case createdAt = "created_at"
+    }
+}
+
+struct NotificationMetadata: Codable {
+    let businessID: String?
+    let invitationID: String?
+    let taskID: String?
+    let businessName: String?
+    let actorEmail: String?
+    let inviterEmail: String?
+
+    enum CodingKeys: String, CodingKey {
+        case businessID = "business_id"
+        case invitationID = "invitation_id"
+        case taskID = "task_id"
+        case businessName = "business_name"
+        case actorEmail = "actor_email"
+        case inviterEmail = "inviter_email"
     }
 }
 
@@ -110,6 +130,7 @@ enum NotificationFilter: String, CaseIterable, Identifiable {
 enum APIError: LocalizedError {
     case missingConfiguration
     case invalidResponse
+    case tokenExpired
     case message(String)
 
     var errorDescription: String? {
@@ -118,6 +139,8 @@ enum APIError: LocalizedError {
             return "Supabase is not configured. Update AppConfig.swift with your anon key."
         case .invalidResponse:
             return "Received an invalid response from the server."
+        case .tokenExpired:
+            return "Your session has expired. Please sign in again."
         case .message(let message):
             return message
         }

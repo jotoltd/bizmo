@@ -2,21 +2,18 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { PlanBadge } from "@/components/dashboard/plan-badge";
 import { signOutAction } from "@/app/actions";
-import type { PlanTier, UserRole, BusinessInvitation } from "@/types";
+import type { UserRole, BusinessInvitation } from "@/types";
 import { NotificationDropdown } from "./notification-dropdown";
 
 export const TopNav = ({
   email,
-  plan,
   role,
   invitations = [],
   onAcceptInvitation,
   onRejectInvitation,
 }: {
   email: string;
-  plan: PlanTier;
   role?: UserRole;
   invitations?: BusinessInvitation[];
   onAcceptInvitation?: (invitationId: string) => Promise<void>;
@@ -53,10 +50,6 @@ export const TopNav = ({
         </Link>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          <div className="hidden sm:block" aria-label={`Current plan: ${plan}`}>
-            <PlanBadge plan={plan} />
-          </div>
-
           <NotificationDropdown
             unreadCount={unreadCount}
             invitations={invitations}
@@ -70,15 +63,6 @@ export const TopNav = ({
               className="hidden text-sm font-medium text-electric transition hover:text-white sm:block"
             >
               Admin panel →
-            </Link>
-          )}
-
-          {plan === "free" && (
-            <Link
-              href="/upgrade"
-              className="hidden text-sm font-medium text-electric transition hover:text-white sm:block"
-            >
-              Upgrade to unlock Pro →
             </Link>
           )}
 
@@ -135,16 +119,6 @@ export const TopNav = ({
                     className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
                   >
                     Admin panel
-                  </Link>
-                )}
-                {plan === "free" && (
-                  <Link
-                    href="/upgrade"
-                    role="menuitem"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
-                  >
-                    Upgrade
                   </Link>
                 )}
                 <div className="my-1 h-px bg-white/10" />

@@ -9,7 +9,6 @@ export default async function Settings() {
   return (
     <SettingsPage
       email={profile.email}
-      plan={profile.plan}
       role={profile.role}
       invitations={invitations}
     />

@@ -2,10 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
-  getEmailCampaigns,
   upsertEmailCampaign,
   sendCampaignNow,
   deleteCampaign,
@@ -35,7 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export function CampaignsManager({ initialCampaigns }: { initialCampaigns: Campaign[] }) {
   const router = useRouter();
-  const [campaigns, setCampaigns] = useState(initialCampaigns);
+  const [campaigns] = useState(initialCampaigns);
   const [statusFilter, setStatusFilter] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
@@ -229,8 +227,6 @@ function CampaignForm({
             className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-electric focus:outline-none"
           >
             <option value="all">All Users</option>
-            <option value="free">Free Plan</option>
-            <option value="pro">Pro Plan</option>
             <option value="freelancer">Freelancers</option>
             <option value="agency">Agencies</option>
             <option value="enterprise">Enterprise</option>
