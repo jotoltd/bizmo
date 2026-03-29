@@ -10,6 +10,20 @@ import {
 } from "@/lib/admin/actions";
 import type { RoadmapPhase, RoadmapStep, AudienceTag } from "@/types";
 
+const emptyStep: Partial<RoadmapStep> = {
+  phase_id: "",
+  title: "",
+  description: "",
+  why: "",
+  how: [],
+  affiliate_link: null,
+  affiliate_name: null,
+  mandatory: false,
+  status: "draft",
+  publish_at: null,
+  sort_order: 0,
+};
+
 // ── Phase Form ───────────────────────────────────────────
 
 function PhaseForm({
@@ -258,25 +272,32 @@ export function RoadmapManager({
 
   return (
     <div className="space-y-8">
-      {/* Tags display */}
-      <div className="glass-panel p-5 space-y-3">
-        <h3 className="text-sm font-semibold text-slate-300">Audience Tags</h3>
-        <div className="flex flex-wrap gap-2">
-          {initialTags.map((tag) => (
-            <span
-              key={tag.id}
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300"
-            >
-              {tag.label}
-            </span>
-          ))}
+      {/* Tags - moved to bottom as reference */}
+      {initialTags.length > 0 && (
+        <div className="glass-panel p-4 space-y-2">
+          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Audience Tags</h3>
+          <div className="flex flex-wrap gap-2">
+            {initialTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-slate-400"
+              >
+                {tag.label}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Phases */}
+      {/* Sections */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Sections</h2>
+          <div>
+            <h2 className="text-xl font-semibold">Sections</h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {phases.length} section{phases.length !== 1 ? 's' : ''} · {steps.length} task{steps.length !== 1 ? 's' : ''} total
+            </p>
+          </div>
           <Button
             onClick={() => {
               setEditingPhase(undefined);
@@ -412,37 +433,23 @@ export function RoadmapManager({
                     ))}
                   </div>
                 )}
+                
+                {/* Add Task Button - always shown */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setEditingStep({ ...emptyStep, phase_id: phase.id } as RoadmapStep);
+                    setShowStepForm(true);
+                  }}
+                  className="w-full mt-2 border border-dashed border-white/20 hover:border-electric/50 text-slate-400 hover:text-electric"
+                >
+                  + Add task to this section
+                </Button>
               </div>
             );
           })}
         </div>
-      </section>
-
-      {/* Steps */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Add Step</h2>
-          <Button
-            onClick={() => {
-              setEditingStep(undefined);
-              setShowStepForm(true);
-            }}
-            size="sm"
-          >
-            + Add Step
-          </Button>
-        </div>
-        {showStepForm && (
-          <StepForm
-            key={editingStep?.id ?? "new-step"}
-            step={editingStep}
-            phases={phases}
-            onClose={() => {
-              setShowStepForm(false);
-              setEditingStep(undefined);
-            }}
-          />
-        )}
       </section>
     </div>
   );
