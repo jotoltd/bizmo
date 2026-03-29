@@ -28,7 +28,7 @@ export default async function AdminDashboardPage() {
           <Link
             key={card.label}
             href={card.href}
-            className="glass-panel flex flex-col gap-1 p-5 transition hover:border-electric/30"
+            className="glass-panel flex flex-col gap-1 p-5 transition-all hover:border-electric/50 hover:bg-white/5 cursor-pointer active:scale-[0.98]"
           >
             <p className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-500">
               {card.label}
@@ -41,7 +41,7 @@ export default async function AdminDashboardPage() {
       {/* Breakdowns */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Plan breakdown */}
-        <div className="glass-panel p-6 space-y-4">
+        <Link href="/admin/users" className="glass-panel p-6 space-y-4 transition-all hover:border-electric/50 hover:bg-white/5 cursor-pointer active:scale-[0.98] block">
           <h2 className="text-lg font-semibold">Plan Breakdown</h2>
           <div className="space-y-3">
             {Object.entries(stats.planBreakdown).map(([plan, count]) => {
@@ -66,10 +66,10 @@ export default async function AdminDashboardPage() {
               );
             })}
           </div>
-        </div>
+        </Link>
 
         {/* User type breakdown */}
-        <div className="glass-panel p-6 space-y-4">
+        <Link href="/admin/users" className="glass-panel p-6 space-y-4 transition-all hover:border-electric/50 hover:bg-white/5 cursor-pointer active:scale-[0.98] block">
           <h2 className="text-lg font-semibold">User Types</h2>
           <div className="space-y-3">
             {Object.entries(stats.typeBreakdown).map(([type, count]) => {
@@ -94,7 +94,7 @@ export default async function AdminDashboardPage() {
               );
             })}
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Quick links */}
