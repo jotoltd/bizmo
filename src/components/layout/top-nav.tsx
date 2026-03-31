@@ -2,9 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signOutAction } from "@/app/actions";
 import type { UserRole, BusinessInvitation } from "@/types";
 import { NotificationDropdown } from "./notification-dropdown";
+import { MobileMenu, MobileBottomNav } from "./mobile-nav";
+import { Menu } from "lucide-react";
 
 export const TopNav = ({
   email,
@@ -36,105 +39,137 @@ export const TopNav = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userMenuOpen]);
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOutAction();
+    router.push("/login");
+  };
+
   return (
-    <header className="w-full border-b border-white/5 bg-black/30 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <Link href="/dashboard" className="flex min-w-0 items-center gap-3 text-lg font-semibold">
-          <div className="h-10 w-10 rounded-xl bg-electric text-black grid place-items-center text-base font-bold">
-            Bz
-          </div>
-          <div className="hidden sm:block">
-            <p className="text-sm uppercase tracking-[0.5em] text-slate-500">Bizno</p>
-            <p className="text-white">Digital Readiness OS</p>
-          </div>
-        </Link>
+    <>
+      <header className="relative z-[var(--z-sticky)] w-full border-b border-white/5 bg-black/30 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link href="/dashboard" className="flex min-w-0 items-center gap-3 text-lg font-semibold">
+            <div className="h-10 w-10 rounded-xl bg-electric text-black grid place-items-center text-base font-bold">
+              Bz
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-sm uppercase tracking-[0.5em] text-slate-500">Bizno</p>
+              <p className="text-white">Digital Readiness OS</p>
+            </div>
+          </Link>
 
-        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          <NotificationDropdown
-            unreadCount={unreadCount}
-            invitations={invitations}
-            onAccept={onAcceptInvitation}
-            onReject={onRejectInvitation}
-          />
+          {/* Mobile Menu Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="sm:hidden p-2 rounded-lg border border-white/10 bg-white/5 text-slate-200"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
 
-          {role === "admin" && (
-            <Link
-              href="/admin"
-              className="hidden text-sm font-medium text-electric transition hover:text-white sm:block"
-            >
-              Admin panel →
-            </Link>
-          )}
+          {/* Desktop Navigation */}
+          <div className="hidden sm:flex shrink-0 items-center gap-2 sm:gap-4">
+            <NotificationDropdown
+              unreadCount={unreadCount}
+              invitations={invitations}
+              onAccept={onAcceptInvitation}
+              onReject={onRejectInvitation}
+            />
 
-          <div ref={userMenuRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              aria-label="Open user menu"
-              aria-expanded={userMenuOpen}
-              aria-haspopup="menu"
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm text-slate-200 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric"
-            >
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-white/10 font-semibold">
-                {initial}
-              </span>
-              <span className="hidden max-w-36 truncate text-xs sm:block">{email}</span>
-            </button>
-
-            {userMenuOpen && (
-              <div
-                role="menu"
-                aria-label="User menu"
-                className="absolute right-0 z-50 mt-2 w-56 rounded-xl border border-white/10 bg-black/95 p-1 shadow-2xl backdrop-blur-xl"
+            {role === "admin" && (
+              <Link
+                href="/admin"
+                className="text-sm font-medium text-electric transition hover:text-white"
               >
-                <Link
-                  href="/dashboard"
-                  role="menuitem"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
+                Admin panel →
+              </Link>
+            )}
+
+            <div ref={userMenuRef} className="relative z-[var(--z-popover)]">
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                aria-label="Open user menu"
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-sm text-slate-200 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric"
+              >
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/10 font-semibold">
+                  {initial}
+                </span>
+                <span className="hidden max-w-36 truncate text-xs sm:block">{email}</span>
+              </button>
+
+              {userMenuOpen && (
+                <div
+                  role="menu"
+                  aria-label="User menu"
+                  className="absolute right-0 z-[var(--z-popover)] mt-2 w-56 rounded-xl border border-white/10 bg-black/95 p-1 shadow-2xl backdrop-blur-xl"
                 >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/notifications"
-                  role="menuitem"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
-                >
-                  Notifications
-                </Link>
-                <Link
-                  href="/settings"
-                  role="menuitem"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
-                >
-                  Settings
-                </Link>
-                {role === "admin" && (
                   <Link
-                    href="/admin"
+                    href="/dashboard"
                     role="menuitem"
                     onClick={() => setUserMenuOpen(false)}
                     className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
                   >
-                    Admin panel
+                    Dashboard
                   </Link>
-                )}
-                <div className="my-1 h-px bg-white/10" />
-                <form action={signOutAction}>
-                  <button
-                    type="submit"
-                    className="block w-full rounded-lg px-3 py-2 text-left text-sm text-rose-200 transition hover:bg-rose-500/20 hover:text-rose-100"
+                  <Link
+                    href="/notifications"
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
                   >
-                    Log out
-                  </button>
-                </form>
-              </div>
-            )}
+                    Notifications
+                  </Link>
+                  <Link
+                    href="/settings"
+                    role="menuitem"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Settings
+                  </Link>
+                  {role === "admin" && (
+                    <Link
+                      href="/admin"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10 hover:text-white"
+                    >
+                      Admin panel
+                    </Link>
+                  )}
+                  <div className="my-1 h-px bg-white/10" />
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm text-rose-200 transition hover:bg-rose-500/20 hover:text-rose-100"
+                    >
+                      Log out
+                    </button>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Mobile Slide-out Menu */}
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        role={role}
+        onSignOut={handleSignOut}
+      />
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav role={role} unreadCount={unreadCount} />
+    </>
   );
 };

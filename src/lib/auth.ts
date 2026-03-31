@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const getSupabaseUser = async (): Promise<User | null> => {
   const supabase = await createSupabaseServerClient();
@@ -34,16 +35,47 @@ export const getProfile = async (): Promise<Profile | null> => {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, email, plan, role, user_type, last_active, suspended")
+    .select("id, email, plan, role, user_type, last_active, suspended, avatar_url, full_name")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
+
+  if (!error && data) {
+    return data as Profile;
+  }
+
+  // Self-heal users that exist in auth but are missing a profile row.
+  if (!data) {
+    try {
+      const admin = createSupabaseAdminClient();
+      await admin.from("profiles").upsert(
+        {
+          id: user.id,
+          email: user.email ?? "",
+          plan: "free",
+        },
+        { onConflict: "id" }
+      );
+
+      const { data: recoveredProfile, error: recoveredError } = await supabase
+        .from("profiles")
+        .select("id, email, plan, role, user_type, last_active, suspended, avatar_url, full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (!recoveredError && recoveredProfile) {
+        return recoveredProfile as Profile;
+      }
+    } catch (recoveryError) {
+      console.error("Failed to recover missing profile", recoveryError);
+    }
+  }
 
   if (error) {
     console.error("Failed to fetch profile", error.message);
     return null;
   }
 
-  return data as Profile;
+  return null;
 };
 
 export const requireProfile = async (): Promise<Profile> => {

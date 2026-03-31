@@ -8,11 +8,11 @@ const securityHeaders = {
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Content-Security-Policy": [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://plausible.io",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' blob: data:",
     "font-src 'self'",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://plausible.io",
     "frame-ancestors 'none'",
     "form-action 'self'",
     "base-uri 'self'",

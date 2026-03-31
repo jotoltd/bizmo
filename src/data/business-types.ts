@@ -9,6 +9,22 @@ export const BUSINESS_TYPES = [
   "Non-profit",
   "Consultancy",
   "Education",
+  "Healthcare",
+  "Real Estate",
+  "Construction",
+  "Manufacturing",
+  "Transportation",
+  "Finance",
+  "Legal Services",
+  "Marketing",
+  "Technology",
+  "Arts & Entertainment",
+  "Sports & Fitness",
+  "Travel & Tourism",
+  "Hospitality",
+  "Agriculture",
+  "Energy",
+  "Media & Publishing",
 ] as const;
 
 export type BusinessType = (typeof BUSINESS_TYPES)[number];

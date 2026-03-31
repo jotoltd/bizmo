@@ -11,6 +11,7 @@ import type {
 } from "@/types";
 import { cn, percent } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import {
   cancelBusinessInvitationAction,
@@ -387,15 +388,62 @@ export const BusinessExperience = ({
       </div>
 
       {showOnboarding && (
-        <section className="glass-panel rounded-2xl border-electric/30 bg-electric/10 p-5">
-          <p className="text-xs uppercase tracking-[0.35em] text-electric">New business onboarding</p>
-          <h2 className="mt-2 text-xl font-semibold text-white">Nice — your business is ready.</h2>
-          <div className="mt-3 grid gap-3 text-sm text-slate-200 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">1) Pick checklist or wizard view</div>
-            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">2) Complete your first 3 tasks</div>
-            <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">3) Add teammates to keep momentum</div>
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-panel rounded-2xl border-electric/30 bg-gradient-to-br from-electric/10 to-purple-500/5 p-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.35em] text-electric">New business onboarding</p>
+              <h2 className="mt-2 text-xl font-semibold text-white">Welcome to your business! 🎉</h2>
+            </div>
+            <motion.div 
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-3xl"
+            >
+              🚀
+            </motion.div>
           </div>
-        </section>
+          <p className="text-slate-300 mb-4">Follow these steps to get started with {business.name}:</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="group rounded-xl border border-white/10 bg-black/20 p-4 hover:border-electric/30 transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-electric/20 flex items-center justify-center text-sm">1</div>
+                <span className="text-sm font-medium text-white">Pick your view</span>
+              </div>
+              <p className="text-xs text-slate-400">Choose between checklist or wizard mode</p>
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="group rounded-xl border border-white/10 bg-black/20 p-4 hover:border-electric/30 transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center text-sm">2</div>
+                <span className="text-sm font-medium text-white">Complete tasks</span>
+              </div>
+              <p className="text-xs text-slate-400">Start with your first 3 priority items</p>
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="group rounded-xl border border-white/10 bg-black/20 p-4 hover:border-electric/30 transition-colors"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center text-sm">3</div>
+                <span className="text-sm font-medium text-white">Invite team</span>
+              </div>
+              <p className="text-xs text-slate-400">Add teammates to collaborate</p>
+            </motion.div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+            <span className="inline-block w-2 h-2 rounded-full bg-electric animate-pulse" />
+            Tip: Click any step to see detailed guidance on how to complete it
+          </div>
+        </motion.section>
       )}
 
       <section className="glass-panel p-5 space-y-4">
@@ -700,33 +748,67 @@ const ChecklistStepRow = ({
         )}
       </div>
       {expanded && (
-        <div className="mt-3 ml-8 border-t border-white/5 pt-3 space-y-3">
-          {step.how && step.how.length > 0 && (
-            <ol className="space-y-1.5 text-sm text-slate-300">
-              {step.how.map((instruction: string, index: number) => (
-                <li key={index} className="flex gap-2">
-                  <span className="text-slate-500 text-xs">{index + 1}.</span>
-                  <span className="text-xs">{instruction}</span>
-                </li>
-              ))}
-            </ol>
+        <div className="mt-4 ml-8 border-t border-white/10 pt-4 space-y-4">
+          {/* Why this matters section */}
+          {step.why && (
+            <div className="rounded-xl bg-electric/5 border border-electric/20 p-4">
+              <p className="text-xs uppercase tracking-wider text-electric font-semibold mb-2">
+                Why this matters
+              </p>
+              <p className="text-sm text-slate-300 leading-relaxed">{step.why}</p>
+            </div>
           )}
+
+          {/* How to complete - Step by step guide */}
+          {step.how && step.how.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                How to complete this step
+              </p>
+              <ol className="space-y-3">
+                {step.how.map((instruction: string, index: number) => (
+                  <li key={index} className="flex gap-3 items-start">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-medium text-slate-400">
+                      {index + 1}
+                    </span>
+                    <span className="text-sm text-slate-200 leading-relaxed pt-0.5">{instruction}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* Special Offer Section */}
           {hasAffiliate && (
-            <div className="rounded-xl border border-green-500/20 bg-green-500/10 p-3">
-              <p className="text-xs text-green-400 font-semibold mb-1">Special Offer</p>
+            <div className="rounded-xl border border-green-500/30 bg-gradient-to-r from-green-500/10 to-green-500/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">💰</span>
+                <p className="text-sm text-green-400 font-semibold">Exclusive Partner Offer</p>
+              </div>
+              <p className="text-xs text-slate-400 mb-3">
+                We&apos;ve partnered with {step.affiliate_name} to get you a special deal for this step.
+              </p>
               <a
                 href={step.affiliate_link!}
                 target="_blank"
                 rel="noreferrer"
                 className={cn(
                   buttonVariants({ variant: "default", size: "sm" }),
-                  "bg-green-500 text-black hover:bg-green-400"
+                  "bg-green-500 text-black hover:bg-green-400 w-full sm:w-auto"
                 )}
               >
-                {step.affiliate_name} ↗
+                Claim {step.affiliate_name} Offer →
               </a>
             </div>
           )}
+
+          {/* Tips section */}
+          <div className="rounded-lg bg-white/5 p-3">
+            <p className="text-xs text-slate-500 mb-1">💡 Pro Tip</p>
+            <p className="text-xs text-slate-400">
+              Take your time with this step. Completing it properly will save you time later.
+            </p>
+          </div>
         </div>
       )}
     </div>

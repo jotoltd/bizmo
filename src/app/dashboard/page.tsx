@@ -30,7 +30,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     const supabase = await createSupabaseServerClient();
     const { data: targetProfile } = await supabase
       .from("profiles")
-      .select("id, email, plan, role, user_type, last_active, suspended")
+      .select("id, email, plan, role, user_type, last_active, suspended, avatar_url, full_name")
       .eq("id", params.impersonate)
       .maybeSingle();
 

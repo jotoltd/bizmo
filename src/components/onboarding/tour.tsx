@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const TOUR_STEPS = [
@@ -28,15 +28,16 @@ const TOUR_STEPS = [
 
 export function OnboardingTour({ businessId, onComplete }: { businessId: string; onComplete?: () => void }) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [show] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    return !localStorage.getItem(`tour-${businessId}`);
-  });
+  const [show, setShow] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [completed, setCompleted] = useState(false);
 
-  if (!show || completed) return null;
+  useEffect(() => {
+    setMounted(true);
+    setShow(!localStorage.getItem(`tour-${businessId}`));
+  }, [businessId]);
+
+  if (!mounted || !show || completed) return null;
 
   const step = TOUR_STEPS[currentStep];
   const isLast = currentStep === TOUR_STEPS.length - 1;

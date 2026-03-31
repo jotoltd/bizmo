@@ -12,6 +12,8 @@ export type Profile = {
   user_type: UserType;
   last_active: string;
   suspended: boolean;
+  avatar_url: string | null;
+  full_name: string | null;
 };
 
 export type Business = {
@@ -23,6 +25,7 @@ export type Business = {
   view_preference: "checklist" | "wizard";
   status: BusinessStatus;
   created_at: string;
+  logo_url: string | null;
 };
 
 export type BusinessMembershipRole = "owner" | "admin" | "member";
@@ -83,6 +86,13 @@ export type RoadmapStep = {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  // Comprehensive guidance fields
+  time_estimate: string | null;
+  difficulty: "easy" | "medium" | "hard" | null;
+  prerequisites: string[] | null;
+  resources: { name: string; url: string }[] | null;
+  common_pitfalls: string[] | null;
+  success_criteria: string | null;
 };
 
 export type AudienceTag = {

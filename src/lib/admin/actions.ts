@@ -153,12 +153,11 @@ export async function updateUser(formData: FormData) {
   const plan = formData.get("plan") as string | null;
   const role = formData.get("role") as string | null;
   const user_type = formData.get("user_type") as string | null;
-  const suspended = formData.get("suspended");
 
   if (plan) payload.plan = plan;
   if (role) payload.role = role;
   if (user_type) payload.user_type = user_type;
-  if (suspended !== null) payload.suspended = suspended === "on";
+  payload.suspended = formData.get("suspended") === "on";
 
   const { error } = await supabase.from("profiles").update(payload).eq("id", id);
   if (error) throw new Error(error.message);
@@ -526,9 +525,7 @@ export async function sendNotification(formData: FormData) {
 
   // Get target user IDs based on audience
   let query = supabase.from("profiles").select("id");
-  if (audience === "free" || audience === "pro") {
-    query = query.eq("plan", audience);
-  } else if (["freelancer", "agency", "enterprise"].includes(audience)) {
+  if (["freelancer", "agency", "enterprise"].includes(audience)) {
     query = query.eq("user_type", audience);
   }
 
@@ -583,7 +580,6 @@ export async function getAdminStats() {
 
   const planBreakdown = {
     free: profiles.filter((p: { plan: string }) => p.plan === "free").length,
-    pro: profiles.filter((p: { plan: string }) => p.plan === "pro").length,
   };
 
   const typeBreakdown = {

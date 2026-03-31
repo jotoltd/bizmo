@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // ── Audit Logs ────────────────────────────────────────────
 
@@ -476,9 +477,7 @@ export async function sendCampaignNow(campaignId: string) {
   // Get target users based on audience
   let userQuery = supabase.from("profiles").select("id, email");
 
-  if (campaign.audience === "free" || campaign.audience === "pro") {
-    userQuery = userQuery.eq("plan", campaign.audience);
-  } else if (["freelancer", "agency", "enterprise"].includes(campaign.audience)) {
+  if (["freelancer", "agency", "enterprise"].includes(campaign.audience)) {
     userQuery = userQuery.eq("user_type", campaign.audience);
   }
 
@@ -546,7 +545,7 @@ export async function getRecentActivity(limit = 10): Promise<ActivityItem[]> {
   // Get recent businesses
   const { data: recentBusinesses } = await supabase
     .from("businesses")
-    .select("id, name, created_at, owner_id")
+    .select("id, name, created_at, user_id")
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -624,11 +623,47 @@ export async function getSystemStatus(): Promise<SystemStatus> {
     issues.push("Database connection failed");
   }
 
+  const { error: profileSchemaError } = await supabase
+    .from("profiles")
+    .select("avatar_url, full_name")
+    .limit(1);
+  if (profileSchemaError) {
+    database = database === "down" ? "down" : "degraded";
+    issues.push("Profiles schema mismatch (avatar/full name columns missing).");
+  }
+
+  const { error: businessSchemaError } = await supabase
+    .from("businesses")
+    .select("logo_url")
+    .limit(1);
+  if (businessSchemaError) {
+    database = database === "down" ? "down" : "degraded";
+    issues.push("Businesses schema mismatch (logo column missing).");
+  }
+
   // Check storage
-  const { error: storageError } = await supabase.storage.listBuckets();
+  const { data: buckets, error: storageError } = await supabase.storage.listBuckets();
   if (storageError) {
     storage = "degraded";
     issues.push("Storage API slow or unavailable");
+  } else {
+    const bucketNames = new Set((buckets ?? []).map((bucket) => bucket.name));
+    if (!bucketNames.has("avatars") || !bucketNames.has("logos")) {
+      storage = "degraded";
+      issues.push("Required storage buckets are missing (avatars/logos).");
+    }
+  }
+
+  try {
+    const admin = createSupabaseAdminClient();
+    const { error: authUsersError } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
+    if (authUsersError) {
+      auth = "degraded";
+      issues.push("Auth admin API check failed.");
+    }
+  } catch {
+    auth = "degraded";
+    issues.push("Auth admin client unavailable.");
   }
 
   return {
@@ -677,8 +712,8 @@ export async function adminSearch(query: string): Promise<SearchResult[]> {
   // Search businesses
   const { data: businesses } = await supabase
     .from("businesses")
-    .select("id, name, company_number")
-    .or(`name.ilike.%${query}%,company_number.ilike.%${query}%`)
+    .select("id, name, type")
+    .ilike("name", `%${query}%`)
     .limit(5);
 
   businesses?.forEach((biz) => {
@@ -686,7 +721,7 @@ export async function adminSearch(query: string): Promise<SearchResult[]> {
       id: biz.id,
       type: "business",
       title: biz.name,
-      subtitle: biz.company_number || "No company number",
+      subtitle: biz.type || "Unknown type",
       link: `/admin/businesses`,
     });
   });

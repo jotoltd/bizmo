@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
-import { getSupabaseUser } from "@/lib/auth";
+import { getProfile } from "@/lib/auth";
 import { AuthPanel } from "./auth-panel";
 
 export default async function LoginPage() {
-  const user = await getSupabaseUser();
-  if (user) redirect("/dashboard");
+  const profile = await getProfile();
+  if (profile) redirect("/dashboard");
 
   return <AuthPanel />;
 }

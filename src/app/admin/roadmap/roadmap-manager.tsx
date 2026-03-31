@@ -22,6 +22,12 @@ const emptyStep: Partial<RoadmapStep> = {
   status: "draft",
   publish_at: null,
   sort_order: 0,
+  time_estimate: null,
+  difficulty: null,
+  prerequisites: [],
+  resources: [],
+  common_pitfalls: [],
+  success_criteria: null,
 };
 
 // ── Task Card (Memoized for speed) ───────────────────────
@@ -232,6 +238,73 @@ function StepForm({
           rows={3}
           className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-electric focus:outline-none"
           placeholder="Step 1&#10;Step 2&#10;Step 3"
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-1">
+          <label className="text-xs text-slate-400">Time Estimate</label>
+          <input
+            name="time_estimate"
+            defaultValue={step?.time_estimate ?? ""}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-electric focus:outline-none"
+            placeholder="e.g. 30 minutes"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs text-slate-400">Difficulty</label>
+          <select
+            name="difficulty"
+            defaultValue={step?.difficulty ?? ""}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-electric focus:outline-none"
+          >
+            <option value="">Select difficulty</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs text-slate-400">Success Criteria</label>
+          <input
+            name="success_criteria"
+            defaultValue={step?.success_criteria ?? ""}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-electric focus:outline-none"
+            placeholder="How to know it's done"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs text-slate-400">Prerequisites (what should be done first, one per line)</label>
+        <textarea
+          name="prerequisites"
+          defaultValue={step?.prerequisites?.join("\n") ?? ""}
+          rows={2}
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-electric focus:outline-none"
+          placeholder="Prerequisite 1&#10;Prerequisite 2"
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs text-slate-400">Common Pitfalls (what to avoid, one per line)</label>
+        <textarea
+          name="common_pitfalls"
+          defaultValue={step?.common_pitfalls?.join("\n") ?? ""}
+          rows={2}
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-electric focus:outline-none"
+          placeholder="Mistake to avoid 1&#10;Mistake to avoid 2"
+        />
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs text-slate-400">Resources (format: Name|URL, one per line)</label>
+        <textarea
+          name="resources"
+          defaultValue={step?.resources?.map(r => `${r.name}|${r.url}`).join("\n") ?? ""}
+          rows={2}
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-electric focus:outline-none"
+          placeholder="Helpful Tool|https://example.com&#10;Guide|https://guide.com"
         />
       </div>
 

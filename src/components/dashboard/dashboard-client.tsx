@@ -64,7 +64,7 @@ export function DashboardClient({ profile, businesses, invitations }: DashboardC
       )}
       
       {showWizard && (
-        <FirstBusinessWizard userId={profile.id} onComplete={handleWizardComplete} />
+        <FirstBusinessWizard onComplete={handleWizardComplete} />
       )}
 
       <main className="mx-auto max-w-6xl px-4 py-8">

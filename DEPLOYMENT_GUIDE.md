@@ -1,4 +1,4 @@
-# Bizno Pre-Launch Deployment Checklist
+ # Bizno Pre-Launch Deployment Checklist
 
 ## 1. Environment Variables Configuration
 

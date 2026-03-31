@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { TopNav } from "@/components/layout/top-nav";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
   acceptBusinessInvitationAction,
   rejectBusinessInvitationAction,
@@ -10,16 +11,25 @@ import {
   getEmailPreferencesAction,
   updateEmailPreferencesAction,
 } from "@/app/dashboard/actions-email";
-import type { UserEmailPreferences, BusinessInvitation, UserRole } from "@/types";
+import { uploadAvatar, removeAvatar, uploadBusinessLogo, removeBusinessLogo } from "@/lib/storage/actions";
+import type { UserEmailPreferences, BusinessInvitation, UserRole, Business } from "@/types";
 
 export default function SettingsPage({
-  invitations,
+  userId,
   email,
   role,
+  avatarUrl,
+  fullName,
+  invitations,
+  businesses,
 }: {
-  invitations: BusinessInvitation[];
+  userId: string;
   email: string;
   role?: UserRole;
+  avatarUrl: string | null;
+  fullName: string | null;
+  invitations: BusinessInvitation[];
+  businesses: Business[];
 }) {
   const [preferences, setPreferences] = useState<UserEmailPreferences | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,6 +112,68 @@ export default function SettingsPage({
           <h1 className="text-2xl font-semibold">Settings</h1>
           <p className="text-slate-400">Manage your account preferences</p>
         </div>
+
+        {/* Profile Photo */}
+        <section className="glass-panel p-6 space-y-6">
+          <div className="flex items-center gap-4">
+            <ImageUpload
+              currentImageUrl={avatarUrl}
+              onUpload={uploadAvatar}
+              onRemove={() => removeAvatar(userId)}
+              entityId={userId}
+              entityType="profile"
+              size="lg"
+              shape="circle"
+            />
+            <div>
+              <h2 className="text-lg font-semibold">Profile Photo</h2>
+              <p className="text-sm text-slate-400">
+                Upload a photo to personalize your account
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Business Logos */}
+        {businesses.length > 0 && (
+          <section className="glass-panel p-6 space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold">Business Logos</h2>
+              <p className="text-sm text-slate-400">
+                Add logos to your businesses
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {businesses.map((business) => (
+                <div
+                  key={business.id}
+                  className="flex items-center gap-4 p-4 rounded-xl border border-white/10 bg-white/[0.03]"
+                >
+                  <ImageUpload
+                    currentImageUrl={business.logo_url}
+                    onUpload={(formData) => {
+                      formData.append("userId", userId);
+                      return uploadBusinessLogo(formData);
+                    }}
+                    onRemove={() => removeBusinessLogo(business.id, userId)}
+                    entityId={business.id}
+                    entityType="business"
+                    size="md"
+                    shape="square"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white truncate">
+                      {business.name}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {business.type}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="glass-panel p-6 space-y-6">
           <div>
